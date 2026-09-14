@@ -1,0 +1,681 @@
+/* =========================
+   CONFIGURACIÓN GENERAL
+========================= */
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: Arial, Helvetica, sans-serif;
+    background: #ffffff;
+    color: #17243a;
+}
+
+
+/* =========================
+   BARRA SUPERIOR
+========================= */
+
+.top-bar {
+    height: 38px;
+    background: #f5f6f8;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    padding: 0 7%;
+
+    font-size: 13px;
+}
+
+.top-info {
+    display: flex;
+    gap: 35px;
+}
+
+.top-info span {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+}
+
+.top-info i {
+    color: #17243a;
+}
+
+.social {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+}
+
+.social i {
+    cursor: pointer;
+}
+
+
+/* =========================
+   ENCABEZADO
+========================= */
+
+.header-main {
+    min-height: 105px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 0 7%;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+
+/* LOGO */
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.logo-icon {
+    width: 48px;
+    height: 48px;
+
+    background: #0875d1;
+    color: white;
+
+    border-radius: 7px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    font-size: 25px;
+}
+
+.logo h1 {
+    color: #075bb2;
+    font-size: 24px;
+    letter-spacing: 1px;
+}
+
+.logo p {
+    color: #123d73;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+
+/* =========================
+   BUSCADOR
+========================= */
+
+.search {
+    width: 45%;
+    height: 42px;
+
+    display: flex;
+
+    border: 1px solid #d7d7d7;
+    border-radius: 7px;
+
+    overflow: hidden;
+}
+
+.search input {
+    flex: 1;
+
+    border: none;
+    outline: none;
+
+    padding: 0 15px;
+
+    font-size: 14px;
+}
+
+.search button {
+    width: 55px;
+
+    border: none;
+
+    background: #0875d1;
+    color: white;
+
+    cursor: pointer;
+
+    font-size: 18px;
+}
+
+
+/* =========================
+   USUARIO Y CARRITO
+========================= */
+
+.header-options {
+    display: flex;
+    gap: 35px;
+    align-items: center;
+}
+
+.account,
+.cart {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.account i,
+.cart > i {
+    font-size: 22px;
+}
+
+.cart small {
+    display: block;
+    margin-top: 4px;
+    font-size: 13px;
+}
+
+
+/* =========================
+   MENÚ
+========================= */
+
+nav {
+    height: 58px;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    gap: 75px;
+
+    border-bottom: 1px solid #eeeeee;
+}
+
+nav a {
+    height: 58px;
+
+    display: flex;
+    align-items: center;
+
+    position: relative;
+
+    text-decoration: none;
+
+    color: #17243a;
+
+    font-size: 14px;
+}
+
+nav a i {
+    margin-left: 7px;
+    font-size: 10px;
+}
+
+nav a.active {
+    color: #0875d1;
+}
+
+nav a.active::after {
+    content: "";
+
+    position: absolute;
+
+    bottom: 0;
+    left: 0;
+
+    width: 100%;
+    height: 3px;
+
+    background: #0875d1;
+}
+
+
+/* =========================
+   TÍTULO CONTACTO
+========================= */
+
+.contact-title {
+    text-align: center;
+
+    padding: 28px 20px 25px;
+}
+
+.contact-title h2 {
+    font-size: 38px;
+
+    color: #142d52;
+}
+
+.line {
+    width: 45px;
+    height: 3px;
+
+    background: #0875d1;
+
+    margin: 12px auto;
+}
+
+.contact-title p {
+    max-width: 700px;
+
+    margin: auto;
+
+    line-height: 1.6;
+
+    font-size: 16px;
+
+    color: #333;
+}
+
+
+/* =========================
+   CONTENEDOR CONTACTO
+========================= */
+
+.contact-container {
+    max-width: 1150px;
+
+    margin: 0 auto;
+
+    padding: 0 20px 30px;
+
+    display: grid;
+
+    grid-template-columns: 380px 1fr;
+
+    gap: 28px;
+}
+
+
+/* =========================
+   INFORMACIÓN
+========================= */
+
+.contact-info,
+.contact-form {
+    background: white;
+
+    border: 1px solid #e5e5e5;
+
+    border-radius: 10px;
+
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.07);
+
+    padding: 25px;
+}
+
+.contact-info h2,
+.contact-form h2 {
+    color: #142d52;
+
+    font-size: 22px;
+
+    margin-bottom: 20px;
+}
+
+
+/* ELEMENTOS */
+
+.info-item {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+
+    padding: 13px 0;
+
+    border-bottom: 1px solid #e5e5e5;
+}
+
+.info-item:last-child {
+    border-bottom: none;
+}
+
+.info-icon {
+    min-width: 47px;
+    height: 47px;
+
+    border-radius: 50%;
+
+    background: #eaf4ff;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    color: #0875d1;
+
+    font-size: 19px;
+}
+
+.info-item h3 {
+    font-size: 15px;
+
+    color: #142d52;
+
+    margin-bottom: 4px;
+}
+
+.info-item p {
+    font-size: 14px;
+
+    color: #444;
+
+    line-height: 1.4;
+}
+
+
+/* =========================
+   FORMULARIO
+========================= */
+
+.contact-form form {
+    display: flex;
+
+    flex-direction: column;
+
+    gap: 16px;
+}
+
+.form-row {
+    display: grid;
+
+    grid-template-columns: 1fr 1fr;
+
+    gap: 16px;
+}
+
+.contact-form input,
+.contact-form textarea {
+    width: 100%;
+
+    border: 1px solid #d6dce4;
+
+    border-radius: 6px;
+
+    padding: 13px;
+
+    font-family: Arial, Helvetica, sans-serif;
+
+    font-size: 14px;
+
+    outline: none;
+}
+
+.contact-form input:focus,
+.contact-form textarea:focus {
+    border-color: #0875d1;
+}
+
+.contact-form textarea {
+    height: 150px;
+
+    resize: vertical;
+}
+
+
+/* BOTÓN */
+
+.send-button {
+    height: 48px;
+
+    border: none;
+
+    border-radius: 6px;
+
+    background: #0875d1;
+
+    color: white;
+
+    font-size: 15px;
+
+    font-weight: bold;
+
+    cursor: pointer;
+
+    transition: 0.3s;
+}
+
+.send-button:hover {
+    background: #075eaa;
+}
+
+.send-button i {
+    margin-right: 8px;
+}
+
+
+/* =========================
+   CAJA WHATSAPP
+========================= */
+
+.whatsapp-box {
+    max-width: 1150px;
+
+    margin: 0 auto 30px;
+
+    padding: 18px 30px;
+
+    background: #eaf5ff;
+
+    border-radius: 10px;
+
+    display: flex;
+
+    align-items: center;
+
+    gap: 20px;
+}
+
+.whatsapp-icon {
+    width: 55px;
+    height: 55px;
+
+    border-radius: 50%;
+
+    display: flex;
+
+    justify-content: center;
+    align-items: center;
+
+    color: #0875d1;
+
+    font-size: 35px;
+}
+
+.whatsapp-text {
+    flex: 1;
+}
+
+.whatsapp-text h3 {
+    color: #142d52;
+
+    font-size: 17px;
+
+    margin-bottom: 5px;
+}
+
+.whatsapp-text p {
+    font-size: 14px;
+
+    color: #333;
+}
+
+
+/* BOTÓN WHATSAPP */
+
+.whatsapp-button {
+    padding: 12px 22px;
+
+    border: 1px solid #0875d1;
+
+    border-radius: 6px;
+
+    background: white;
+
+    color: #0875d1;
+
+    text-decoration: none;
+
+    font-weight: bold;
+
+    font-size: 14px;
+
+    transition: 0.3s;
+}
+
+.whatsapp-button:hover {
+    background: #0875d1;
+
+    color: white;
+}
+
+.whatsapp-button i {
+    margin-right: 8px;
+}
+
+
+/* =========================
+   FOOTER
+========================= */
+
+footer {
+    min-height: 75px;
+
+    background: #102a4a;
+
+    color: white;
+
+    padding: 15px 7%;
+
+    display: flex;
+
+    justify-content: space-between;
+
+    align-items: center;
+
+    font-size: 13px;
+}
+
+.footer-left p {
+    margin: 5px 0;
+}
+
+.footer-right {
+    display: flex;
+
+    align-items: center;
+
+    gap: 15px;
+}
+
+.footer-right a {
+    color: white;
+
+    text-decoration: none;
+}
+
+.footer-right a:hover {
+    text-decoration: underline;
+}
+
+
+/* =========================
+   RESPONSIVE
+========================= */
+
+@media (max-width: 1000px) {
+
+    .header-main {
+        flex-wrap: wrap;
+
+        padding: 20px;
+
+        gap: 20px;
+    }
+
+    .search {
+        width: 100%;
+
+        order: 3;
+    }
+
+    .top-info {
+        gap: 15px;
+    }
+
+    .contact-container {
+        grid-template-columns: 1fr;
+    }
+}
+
+
+@media (max-width: 700px) {
+
+    .top-bar {
+        display: none;
+    }
+
+    nav {
+        gap: 20px;
+
+        overflow-x: auto;
+
+        justify-content: flex-start;
+
+        padding: 0 20px;
+    }
+
+    .header-options {
+        gap: 15px;
+    }
+
+    .contact-title h2 {
+        font-size: 30px;
+    }
+
+    .contact-container {
+        padding: 0 15px 25px;
+    }
+
+    .form-row {
+        grid-template-columns: 1fr;
+    }
+
+    .whatsapp-box {
+        margin: 0 15px 25px;
+
+        flex-direction: column;
+
+        text-align: center;
+    }
+
+    .whatsapp-button {
+        width: 100%;
+
+        text-align: center;
+    }
+
+    footer {
+        flex-direction: column;
+
+        gap: 15px;
+
+        text-align: center;
+    }
+
+    .footer-right {
+        flex-wrap: wrap;
+
+        justify-content: center;
+    }
+}
