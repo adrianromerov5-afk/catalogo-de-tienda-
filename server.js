@@ -231,7 +231,67 @@ app.post('/api/contacto', async (req, res) => {
   }
 });
 
-// Obtener mensajes de contacto
+// Credenciales del único Administrador (configurables vía variables de entorno)
+const ADMIN_USER = process.env.ADMIN_USER || 'admin';
+const ADMIN_PASS = process.env.ADMIN_PASS || 'admin123';
+// Token de sesión en memoria para el administrador único
+const activeAdminTokens = new Set();
+
+// Middleware para proteger rutas exclusivas de administrador
+const requireAdminAuth = (req, res, next) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+
+  if (!token || !activeAdminTokens.has(token)) {
+    return res.status(401).json({
+      success: false,
+      error: 'Acceso no autorizado. Se requiere iniciar sesión como Administrador.'
+    });
+  }
+  next();
+};
+
+// Login del único administrador
+app.post('/api/admin/login', (req, res) => {
+  const { usuario, contrasena } = req.body || {};
+
+  if (!usuario || !contrasena) {
+    return res.status(400).json({ success: false, error: 'Usuario y contraseña requeridos.' });
+  }
+
+  if (usuario.trim() === ADMIN_USER && contrasena.trim() === ADMIN_PASS) {
+    const token = 'adm_' + Math.random().toString(36).substring(2) + Date.now().toString(36);
+    activeAdminTokens.add(token);
+    return res.json({
+      success: true,
+      mensaje: 'Autenticación exitosa',
+      token,
+      usuario: ADMIN_USER
+    });
+  }
+
+  return res.status(401).json({
+    success: false,
+    error: 'Credenciales inválidas. Verifica tu usuario y contraseña de administrador.'
+  });
+});
+
+// Logout del administrador
+app.post('/api/admin/logout', (req, res) => {
+  const authHeader = req.headers.authorization || '';
+  const token = authHeader.replace(/^Bearer\s+/i, '').trim();
+  if (token) {
+    activeAdminTokens.delete(token);
+  }
+  res.json({ success: true, mensaje: 'Sesión cerrada correctamente' });
+});
+
+// Verificar token de administrador
+app.get('/api/admin/verify', requireAdminAuth, (req, res) => {
+  res.json({ success: true, usuario: ADMIN_USER });
+});
+
+// Obtener mensajes de contacto (Público/Admin)
 app.get('/api/contactos', async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -243,7 +303,26 @@ app.get('/api/contactos', async (req, res) => {
       return res.status(400).json({ success: false, error: error.message });
     }
 
-    res.json({ success: true, contactos: data });
+    res.json({ success: true, contactos: data || [] });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Eliminar mensaje de contacto (Protegido para administrador)
+app.delete('/api/contactos/:id', requireAdminAuth, async (req, res) => {
+  const { id } = req.params;
+  try {
+    const { error } = await supabase
+      .from('contactos')
+      .delete()
+      .eq('id_contacto', id);
+
+    if (error) {
+      return res.status(400).json({ success: false, error: error.message });
+    }
+
+    res.json({ success: true, mensaje: `Mensaje #${id} eliminado correctamente.` });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }

@@ -65,3 +65,10 @@ CREATE POLICY "Permitir lectura contactos"
 ON public.contactos FOR SELECT 
 TO anon, authenticated 
 USING (true);
+
+-- Permitir eliminar contactos
+CREATE POLICY "Permitir eliminar contactos" 
+ON public.contactos FOR DELETE 
+TO anon, authenticated 
+USING (true);
+

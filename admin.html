@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Panel Administrador - Mensajes | Catálogo Digital</title>
+
+    <!-- Google Fonts & Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <!-- Estilos específicos del panel de administración -->
+    <link rel="stylesheet" href="admin.css">
+</head>
+
+<body>
+
+    <!-- ==============================================
+         PANTALLA DE LOGIN (ÚNICO USUARIO ADMINISTRADOR)
+    =============================================== -->
+    <div class="login-wrapper" id="seccion-login">
+        <div class="login-card">
+            <div class="login-header">
+                <div class="admin-icon-badge">
+                    <i class="fa-solid fa-user-shield"></i>
+                </div>
+                <h2>Acceso Administrador</h2>
+                <p>Módulo exclusivo de gestión de mensajes de contacto</p>
+            </div>
+
+            <form id="form-admin-login">
+                <div class="form-field">
+                    <label for="admin-user"><i class="fa-solid fa-user"></i> Usuario Administrador</label>
+                    <input type="text" id="admin-user" placeholder="Ej. admin" required autocomplete="username">
+                </div>
+
+                <div class="form-field">
+                    <label for="admin-pass"><i class="fa-solid fa-lock"></i> Contraseña</label>
+                    <input type="password" id="admin-pass" placeholder="••••••••" required autocomplete="current-password">
+                </div>
+
+                <div class="alert-box" id="login-alerta" style="display:none;"></div>
+
+                <button type="submit" class="btn-login" id="btn-login-submit">
+                    <i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión
+                </button>
+            </form>
+
+            <div class="login-footer">
+                <a href="inicio.html" class="btn-volver-tienda">
+                    <i class="fa-solid fa-arrow-left"></i> Volver a la Tienda
+                </a>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- ==============================================
+         PANEL DE MENSAJES (CUANDO ESTÁ AUTENTICADO)
+    =============================================== -->
+    <div class="admin-dashboard" id="seccion-dashboard" style="display:none;">
+
+        <!-- Header del Dashboard -->
+        <header class="admin-nav-header">
+            <div class="admin-nav-brand">
+                <div class="brand-logo">
+                    <i class="fa-solid fa-store"></i>
+                </div>
+                <div>
+                    <h2>Supermarket Tame</h2>
+                    <span>Panel Administrador</span>
+                </div>
+            </div>
+
+            <div class="admin-nav-actions">
+                <div class="user-chip">
+                    <i class="fa-solid fa-shield-halved"></i>
+                    <span>Administrador: <strong id="nombre-admin-activo">admin</strong></span>
+                </div>
+                <a href="productos.html" class="btn-nav-link" target="_blank" title="Ver catálogo en vivo">
+                    <i class="fa-solid fa-arrow-up-right-from-square"></i> Ver Tienda
+                </a>
+                <button class="btn-logout" id="btn-cerrar-sesion" title="Cerrar sesión">
+                    <i class="fa-solid fa-power-off"></i> Salir
+                </button>
+            </div>
+        </header>
+
+        <!-- Barra de navegación del sitio -->
+        <nav class="subnav">
+            <a href="inicio.html">Inicio</a>
+            <a href="productos.html">Productos</a>
+            <a href="nosotros.html">Nosotros</a>
+            <a href="contacto.html">Contacto</a>
+            <a href="admin.html" class="active">Panel Admin</a>
+        </nav>
+
+        <!-- Contenido principal -->
+        <main class="dashboard-main">
+
+            <!-- Banner de estadísticas -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-icon icon-blue">
+                        <i class="fa-solid fa-inbox"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total de Mensajes</span>
+                        <strong class="stat-value" id="stat-total-mensajes">0</strong>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-green">
+                        <i class="fa-solid fa-database"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Estado de Base de Datos</span>
+                        <strong class="stat-value" style="font-size:16px; color:#198754;">Supabase Conectado</strong>
+                    </div>
+                </div>
+
+                <div class="stat-card">
+                    <div class="stat-icon icon-purple">
+                        <i class="fa-solid fa-user-lock"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Sesión Activa</span>
+                        <strong class="stat-value" style="font-size:16px; color:#6f42c1;">Único Administrador</strong>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Cabecera de gestión y filtros -->
+            <div class="messages-header-card">
+                <div class="header-left">
+                    <h3><i class="fa-solid fa-envelope-open-text"></i> Buzón de Mensajes de Clientes</h3>
+                    <p>Consulta, responde y administra todos los mensajes enviados desde el formulario de contacto.</p>
+                </div>
+
+                <div class="header-controls">
+                    <div class="search-box">
+                        <i class="fa-solid fa-magnifying-glass"></i>
+                        <input type="text" id="filtro-busqueda-mensajes" placeholder="Buscar por cliente, correo o asunto...">
+                    </div>
+                    <button class="btn-refresh" id="btn-recargar-mensajes" title="Recargar bandeja de entrada">
+                        <i class="fa-solid fa-rotate-right"></i> Actualizar
+                    </button>
+                </div>
+            </div>
+
+            <!-- Mensaje de confirmación o alerta -->
+            <div class="alert-box" id="dashboard-alerta" style="display:none; margin-bottom:20px;"></div>
+
+            <!-- Tabla y lista interactiva de mensajes -->
+            <div class="messages-container" id="mensajes-contenedor">
+                <div class="loading-state" id="mensajes-cargando">
+                    <div class="spinner"></div>
+                    <p>Consultando mensajes desde la tabla contactos de Supabase...</p>
+                </div>
+
+                <div class="messages-list" id="mensajes-lista" style="display:none;">
+                    <!-- Se llena vía JavaScript -->
+                </div>
+            </div>
+
+        </main>
+
+        <!-- Footer -->
+        <footer class="admin-footer">
+            <p>© 2026 Supermarket Tame | Módulo de Administración Protegido</p>
+        </footer>
+
+    </div>
+
+    <!-- MODAL PARA LEER Y RESPONDER MENSAJE COMPLETO -->
+    <div class="modal-overlay" id="modal-detalle-mensaje">
+        <div class="modal-dialog">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-envelope"></i> Detalle del Mensaje</h3>
+                <button class="btn-modal-close" id="btn-cerrar-modal">&times;</button>
+            </div>
+            <div class="modal-body" id="modal-detalle-cuerpo">
+                <!-- Contenido dinámico -->
+            </div>
+            <div class="modal-foot">
+                <button type="button" class="btn-secondary" id="btn-cerrar-modal-accion">Cerrar</button>
+                <button type="button" class="btn-delete" id="btn-eliminar-mensaje-modal">
+                    <i class="fa-solid fa-trash-can"></i> Eliminar Mensaje
+                </button>
+                <a href="#" class="btn-primary" id="btn-responder-email" target="_blank">
+                    <i class="fa-solid fa-reply"></i> Responder por Correo
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script de lógica del módulo administrador -->
+    <script type="module" src="admin.js"></script>
+
+</body>
+</html>
