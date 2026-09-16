@@ -12,6 +12,9 @@
 
     <!-- CSS -->
     <link rel="stylesheet" href="contacto.css">
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -264,9 +267,12 @@
                 <h2>
                     Envíanos un mensaje
                 </h2>
+                <p style="font-size: 13px; color: #666; margin-bottom: 18px;">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color:#0d6efd;"></i> Los mensajes se registran en la tabla <code>contactos</code> de Supabase.
+                </p>
 
 
-                <form>
+                <form id="form-contacto">
 
 
                     <!-- Nombre -->
@@ -275,12 +281,16 @@
 
                         <input
                             type="text"
+                            id="contacto-nombre"
+                            name="nombre_completo"
                             placeholder="Nombre completo"
                             required
                         >
 
                         <input
                             type="email"
+                            id="contacto-email"
+                            name="correo_electronico"
                             placeholder="Correo electrónico"
                             required
                         >
@@ -292,6 +302,8 @@
 
                     <input
                         type="text"
+                        id="contacto-asunto"
+                        name="asunto"
                         placeholder="Asunto"
                         required
                     >
@@ -300,6 +312,8 @@
                     <!-- Mensaje -->
 
                     <textarea
+                        id="contacto-mensaje"
+                        name="mensaje"
                         placeholder="Mensaje"
                         required
                     ></textarea>
@@ -309,14 +323,18 @@
 
                     <button
                         type="submit"
+                        id="btn-enviar-contacto"
                         class="send-button"
                     >
 
                         <i class="fa-regular fa-paper-plane"></i>
 
-                        Enviar mensaje
+                        <span>Enviar mensaje</span>
 
                     </button>
+
+                    <!-- Mensaje de estado -->
+                    <div id="contacto-alerta" style="display: none; margin-top: 18px; padding: 14px 18px; border-radius: 8px; font-size: 14px; line-height: 1.5;"></div>
 
                 </form>
 
@@ -402,6 +420,58 @@
         </div>
 
     </footer>
+
+    <!-- LÓGICA DE ENVÍO A SUPABASE -->
+    <script type="module">
+        import { guardarContacto } from './supabase.js';
+
+        const form = document.getElementById('form-contacto');
+        const btn = document.getElementById('btn-enviar-contacto');
+        const alerta = document.getElementById('contacto-alerta');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            btn.disabled = true;
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando en Supabase...';
+            alerta.style.display = 'none';
+
+            const payload = {
+                nombre_completo: document.getElementById('contacto-nombre').value.trim(),
+                correo_electronico: document.getElementById('contacto-email').value.trim(),
+                asunto: document.getElementById('contacto-asunto').value.trim(),
+                mensaje: document.getElementById('contacto-mensaje').value.trim()
+            };
+
+            const resp = await guardarContacto(payload);
+
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+
+            if (resp.success) {
+                alerta.style.display = 'block';
+                alerta.style.background = '#e6f4ea';
+                alerta.style.color = '#137333';
+                alerta.style.border = '1px solid #ceead6';
+                alerta.innerHTML = `
+                    <strong><i class="fa-solid fa-circle-check"></i> ¡Mensaje enviado con éxito!</strong><br>
+                    Tu consulta ha sido registrada correctamente en la base de datos Supabase (tabla <code>contactos</code>).
+                `;
+                form.reset();
+            } else {
+                alerta.style.display = 'block';
+                alerta.style.background = '#fce8e6';
+                alerta.style.color = '#c5221f';
+                alerta.style.border = '1px solid #fad2cf';
+                alerta.innerHTML = `
+                    <strong><i class="fa-solid fa-circle-exclamation"></i> Aviso de envío:</strong><br>
+                    ${resp.error || 'No se pudo registrar el contacto.'}
+                    ${resp.hint ? `<br><small style="color:#666;">Pista: ${resp.hint}</small>` : ''}
+                `;
+            }
+        });
+    </script>
 
 </body>
 </html>

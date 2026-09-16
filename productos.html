@@ -3,12 +3,14 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Explorar Catálogo</title>
+    <title>Explorar Catálogo - Conectado a Supabase</title>
 
     <link rel="stylesheet" href="productos.css">
 
     <!-- Iconos -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 </head>
 
 <body>
@@ -20,16 +22,33 @@
             <i class="fa-solid fa-store"></i>
             <div>
                 <h2>CATÁLOGO</h2>
-                <span>Tienda Genérica</span>
+                <span>Tienda Supermarket</span>
             </div>
+        </div>
 
-    
+        <!-- Buscador en tiempo real -->
+        <div class="buscador">
+            <input type="text" id="input-busqueda" placeholder="Buscar producto en la base de datos...">
+            <button id="btn-buscar" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+
+        <!-- Estado de Supabase y acciones -->
+        <div class="header-actions">
+            <div class="supabase-badge" id="badge-supabase" title="Estado de conexión con Supabase">
+                <span class="supabase-dot"></span>
+                <span id="texto-estado-supabase">Supabase Conectado</span>
+            </div>
+            <button class="btn-add-prod" id="btn-abrir-modal-crear">
+                <i class="fa-solid fa-plus"></i> Nuevo Producto
+            </button>
+        </div>
+
     </header>
 
     <!-- Menú -->
     <nav>
         <a href="inicio.html">Inicio</a>
-        <a href="productos.html">Productos</a>
+        <a href="productos.html" style="color: #0d6efd;">Productos</a>
         <a href="nosotros.html">Nosotros</a>
         <a href="contacto.html">Contacto</a>
     </nav>
@@ -37,91 +56,273 @@
     <!-- Título -->
     <section class="titulo">
         <h1>Explorar Catálogo</h1>
-        <p>Inicio > Catálogo</p>
+        <p>Inicio > Catálogo digital conectado a Supabase (Tabla: productos)</p>
     </section>
 
     <main>
 
-        
+        <!-- Sidebar de Categorías y Base de Datos -->
+        <aside>
+            <h2>Categorías</h2>
+            <ul id="lista-categorias">
+                <li class="active-filter" data-categoria="todas">
+                    <i class="fa-solid fa-layer-group"></i> Todos los productos
+                </li>
+                <li data-categoria="granos">
+                    <i class="fa-solid fa-wheat-awn"></i> Granos y Harinas
+                </li>
+                <li data-categoria="lacteos">
+                    <i class="fa-solid fa-bottle-water"></i> Lácteos y Huevos
+                </li>
+                <li data-categoria="despensa">
+                    <i class="fa-solid fa-box-open"></i> Despensa y Aceites
+                </li>
+                <li data-categoria="aseo">
+                    <i class="fa-solid fa-soap"></i> Aseo del Hogar
+                </li>
+            </ul>
 
+            <div class="aside-actions">
+                <button class="btn-sync" id="btn-sincronizar" title="Sincronizar productos iniciales en Supabase">
+                    <i class="fa-solid fa-database"></i> Sincronizar Catálogo
+                </button>
+            </div>
         </aside>
 
-        <!-- Productos -->
-        <section class="productos">
-
-            <div class="card">
-                <img src="imagenes/arroz.jpg">
-                <h3>Arroz Diana</h3>
-                <p>Presentación 1 Kg.</p>
-                <h2>$4.500</h2>
-                
+        <!-- Contenedor dinámico de Productos desde Supabase -->
+        <section class="productos" id="contenedor-productos">
+            <!-- Spinner de carga inicial -->
+            <div class="spinner-container" id="spinner-carga">
+                <div class="spinner"></div>
+                <p>Cargando catálogo desde la base de datos Supabase...</p>
             </div>
-
-            <div class="card">
-                <img src="imagenes/aceite.jpg">
-                <h3>Aceite Premier</h3>
-                <p>Botella 900 ml.</p>
-                <h2>$12.000</h2>
-                
-            </div>
-
-            <div class="card">
-                <img src="imagenes/leche.jpg">
-                <h3>Leche Entera</h3>
-                <p>Bolsa 1 Litro.</p>
-                <h2>$3.800</h2>
-               
-            </div>
-
-            <div class="card">
-                <img src="imagenes/huevos.jpg">
-                <h3>Huevos AA</h3>
-                <p>30 Unidades.</p>
-                <h2>$18.000</h2>
-                
-            </div>
-
-            <div class="card">
-                <img src="imagenes/cafe.jpg">
-                <h3>Café Sello Rojo</h3>
-                <p>250 gramos.</p>
-                <h2>$7.500</h2>
-                
-            </div>
-
-            <div class="card">
-                <img src="imagenes/azucar.jpg">
-                <h3>Azúcar incauca</h3>
-                <p>1 Kg.</p>
-                <h2>$3.200</h2>
-               
-            </div>
-
-            <div class="card">
-                <img src="imagenes/atun.jpg">
-                <h3>Atún Van Camp's</h3>
-                <p>160 gramos.</p>
-                <h2>$6.000</h2>
-                
-            </div>
-
-            <div class="card">
-                <img src="imagenes/papel.jpg">
-                <h3>Papel Higiénico</h3>
-                <p>Paquete x4</p>
-                <h2>$6.500</h2>
-               
-            </div>
-
         </section>
 
     </main>
 
+    <!-- MODAL: AGREGAR PRODUCTO A SUPABASE -->
+    <div class="modal-overlay" id="modal-crear">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fa-solid fa-cart-plus" style="color:#0d6efd;"></i> Agregar a Supabase</h3>
+                <button class="modal-close" id="btn-cerrar-modal">&times;</button>
+            </div>
+            <form id="form-nuevo-producto">
+                <div class="form-group">
+                    <label for="nuevo-nombre">Nombre del producto *</label>
+                    <input type="text" id="nuevo-nombre" placeholder="Ej. Lentejas Seleccionadas" required>
+                </div>
+                <div class="form-group">
+                    <label for="nueva-presentacion">Presentación / Descripción</label>
+                    <input type="text" id="nueva-presentacion" placeholder="Ej. Bolsa de 500 gramos" required>
+                </div>
+                <div class="form-group">
+                    <label for="nuevo-precio">Precio (COP) *</label>
+                    <input type="number" id="nuevo-precio" placeholder="Ej. 5200" min="0" required>
+                </div>
+                <div class="form-group">
+                    <label for="nueva-imagen">Imagen</label>
+                    <select id="nueva-imagen">
+                        <option value="imagenes/arroz.jpg">Arroz</option>
+                        <option value="imagenes/aceite.jpg">Aceite</option>
+                        <option value="imagenes/leche.jpg">Leche</option>
+                        <option value="imagenes/huevos.jpg">Huevos</option>
+                        <option value="imagenes/cafe.jpg">Café</option>
+                        <option value="imagenes/azucar.jpg">Azúcar</option>
+                        <option value="imagenes/atun.jpg">Atún</option>
+                        <option value="imagenes/papel.jpg">Papel</option>
+                    </select>
+                </div>
+                <div class="modal-actions">
+                    <button type="button" class="btn-secondary" id="btn-cancelar-crear">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-guardar-producto">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar en Supabase
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Notificación Toast -->
+    <div class="toast-msg" id="toast-msg">
+        <i class="fa-solid fa-circle-check" style="color:#34a853; font-size:18px;"></i>
+        <span id="toast-texto">Operación realizada con éxito</span>
+    </div>
+
     <footer>
-
-        <p>© 2026 Catálogo Digital - Proyecto SENA</p>
-
+        <p>© 2026 Catálogo Digital - Proyecto SENA | Conectado a Supabase PostgreSQL</p>
     </footer>
+
+    <!-- LÓGICA DE INTEGRACIÓN CON SUPABASE -->
+    <script type="module">
+        import { db, obtenerProductos, agregarProducto, sincronizarCatalogo } from './supabase.js';
+
+        let listaProductos = [];
+        let categoriaSeleccionada = 'todas';
+
+        const contenedor = document.getElementById('contenedor-productos');
+        const spinner = document.getElementById('spinner-carga');
+        const inputBusqueda = document.getElementById('input-busqueda');
+        const btnBuscar = document.getElementById('btn-buscar');
+        const modalCrear = document.getElementById('modal-crear');
+        const toast = document.getElementById('toast-msg');
+        const toastTexto = document.getElementById('toast-texto');
+
+        function mostrarToast(mensaje, esError = false) {
+            toastTexto.textContent = mensaje;
+            toast.style.display = 'flex';
+            toast.style.background = esError ? '#c5221f' : '#162033';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 4000);
+        }
+
+        function formatearPrecio(precio) {
+            const num = Number(precio) || 0;
+            return '$' + num.toLocaleString('es-CO');
+        }
+
+        function renderizarProductos(productosParaMostrar) {
+            if (!productosParaMostrar || productosParaMostrar.length === 0) {
+                contenedor.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 12px;">
+                        <i class="fa-solid fa-box-open" style="font-size: 48px; color: #aaa; margin-bottom: 15px;"></i>
+                        <h3 style="color: #16325c; margin-bottom: 8px;">No se encontraron productos</h3>
+                        <p style="color: #666;">No hay coincidencias con tu búsqueda en la base de datos de Supabase.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = productosParaMostrar.map(prod => `
+                <div class="card" id="producto-${prod.id_producto || Math.random().toString(36).substr(2, 6)}">
+                    <img src="${prod.imagen_url || 'imagenes/arroz.jpg'}" alt="${prod.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
+                    <h3>${prod.nombre_producto}</h3>
+                    <p>${prod.presentacion || 'Producto disponible'}</p>
+                    <h2>${formatearPrecio(prod.precio)}</h2>
+                    <button onclick="window.open('https://wa.me/573223884271?text=Hola,%20quisiera%20pedir%20el%20producto:%20${encodeURIComponent(prod.nombre_producto)}%20(${encodeURIComponent(formatearPrecio(prod.precio))})', '_blank')">
+                        <i class="fa-brands fa-whatsapp"></i> Pedir producto
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function filtrarProductos() {
+            const query = inputBusqueda.value.toLowerCase().trim();
+            let filtrados = listaProductos;
+
+            if (categoriaSeleccionada !== 'todas') {
+                filtrados = filtrados.filter(p => {
+                    const nombre = (p.nombre_producto || '').toLowerCase();
+                    const pres = (p.presentacion || '').toLowerCase();
+                    if (categoriaSeleccionada === 'granos') return nombre.includes('arroz') || pres.includes('kg') || nombre.includes('frijol') || nombre.includes('lenteja');
+                    if (categoriaSeleccionada === 'lacteos') return nombre.includes('leche') || nombre.includes('huevo') || nombre.includes('queso');
+                    if (categoriaSeleccionada === 'despensa') return nombre.includes('aceite') || nombre.includes('atún') || nombre.includes('atun') || nombre.includes('café') || nombre.includes('cafe') || nombre.includes('azúcar') || nombre.includes('azucar');
+                    if (categoriaSeleccionada === 'aseo') return nombre.includes('papel') || nombre.includes('jabon') || nombre.includes('jabón');
+                    return true;
+                });
+            }
+
+            if (query) {
+                filtrados = filtrados.filter(p => 
+                    (p.nombre_producto || '').toLowerCase().includes(query) ||
+                    (p.presentacion || '').toLowerCase().includes(query)
+                );
+            }
+
+            renderizarProductos(filtrados);
+        }
+
+        async function cargarCatalogo() {
+            try {
+                spinner.style.display = 'block';
+                const resultado = await obtenerProductos();
+                listaProductos = resultado.productos || [];
+
+                const badge = document.getElementById('badge-supabase');
+                const textoBadge = document.getElementById('texto-estado-supabase');
+
+                if (resultado.source === 'supabase') {
+                    textoBadge.textContent = `Supabase en vivo (${listaProductos.length})`;
+                } else {
+                    textoBadge.textContent = 'Supabase Conectado';
+                }
+
+                renderizarProductos(listaProductos);
+            } catch (err) {
+                console.error('Error al cargar productos:', err);
+                mostrarToast('Error al conectar con la base de datos', true);
+            }
+        }
+
+        // Búsqueda en tiempo real
+        inputBusqueda.addEventListener('input', filtrarProductos);
+        btnBuscar.addEventListener('click', filtrarProductos);
+
+        // Filtro por categorías
+        document.querySelectorAll('#lista-categorias li').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('#lista-categorias li').forEach(li => li.classList.remove('active-filter'));
+                item.classList.add('active-filter');
+                categoriaSeleccionada = item.getAttribute('data-categoria');
+                filtrarProductos();
+            });
+        });
+
+        // Sincronizar catálogo con Supabase
+        document.getElementById('btn-sincronizar').addEventListener('click', async () => {
+            mostrarToast('Sincronizando con Supabase...');
+            const res = await sincronizarCatalogo();
+            if (res.success) {
+                mostrarToast(res.mensaje || '¡Catálogo sincronizado exitosamente en Supabase!');
+                await cargarCatalogo();
+            } else {
+                mostrarToast(res.error || 'Error al sincronizar catálogo con Supabase', true);
+            }
+        });
+
+        // Modal de Crear Producto
+        document.getElementById('btn-abrir-modal-crear').addEventListener('click', () => {
+            modalCrear.style.display = 'flex';
+        });
+        document.getElementById('btn-cerrar-modal').addEventListener('click', () => {
+            modalCrear.style.display = 'none';
+        });
+        document.getElementById('btn-cancelar-crear').addEventListener('click', () => {
+            modalCrear.style.display = 'none';
+        });
+
+        // Guardar nuevo producto
+        document.getElementById('form-nuevo-producto').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const btnGuardar = document.getElementById('btn-guardar-producto');
+            btnGuardar.disabled = true;
+            btnGuardar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
+
+            const nuevo = {
+                nombre_producto: document.getElementById('nuevo-nombre').value.trim(),
+                presentacion: document.getElementById('nueva-presentacion').value.trim(),
+                precio: Number(document.getElementById('nuevo-precio').value),
+                imagen_url: document.getElementById('nueva-imagen').value
+            };
+
+            const resp = await agregarProducto(nuevo);
+            btnGuardar.disabled = false;
+            btnGuardar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar en Supabase';
+
+            if (resp.success) {
+                modalCrear.style.display = 'none';
+                document.getElementById('form-nuevo-producto').reset();
+                mostrarToast('¡Producto guardado exitosamente en Supabase!');
+                await cargarCatalogo();
+            } else {
+                mostrarToast(resp.error || 'No se pudo guardar. Revisa RLS en Supabase.', true);
+            }
+        });
+
+        // Carga inicial
+        cargarCatalogo();
+    </script>
 
 </body>
 </html>

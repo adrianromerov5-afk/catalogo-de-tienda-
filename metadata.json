@@ -1,0 +1,8 @@
+{
+  "name": "Catálogo Digital",
+  "description": "Catálogo digital de productos y contacto para tienda Supermarket en Tame, Arauca, integrado con base de datos en Supabase.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}

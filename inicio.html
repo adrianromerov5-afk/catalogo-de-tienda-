@@ -5,6 +5,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Catálogo Digital</title>
+    <meta name="description" content="Catálogo digital de productos para tienda Supermarket en Tame, Arauca.">
+    <meta property="og:title" content="Catálogo Digital">
+    <meta property="og:description" content="Catálogo digital de productos para tienda Supermarket en Tame, Arauca.">
 
     <link rel="stylesheet" href="inicio.css">
     <!-- Supabase CDN -->
@@ -34,31 +37,31 @@
         </a>
     </section>
 
-    <section class="productos">
+    <section class="productos" id="productos-destacados">
 
         <div class="card">
-            <img src="imagenes/arroz.jpg" alt="">
+            <img src="imagenes/arroz.jpg" alt="Arroz Diana">
             <h3>Arroz Diana</h3>
             <p>Presentación de 1 Kg.</p>
             <div class="precio">$4.500</div>
         </div>
 
         <div class="card">
-            <img src="imagenes/aceite.jpg" alt="">
+            <img src="imagenes/aceite.jpg" alt="Aceite Premier">
             <h3>Aceite Premier</h3>
             <p>Botella de 900 ml.</p>
             <div class="precio">$12.000</div>
         </div>
 
         <div class="card">
-            <img src="imagenes/leche.jpg" alt="">
+            <img src="imagenes/leche.jpg" alt="Leche Entera">
             <h3>Leche Entera</h3>
             <p>Bolsa de 1 litro.</p>
             <div class="precio">$3.800</div>
         </div>
 
         <div class="card">
-            <img src="imagenes/huevos.jpg" alt="">
+            <img src="imagenes/huevos.jpg" alt="Huevos AA">
             <h3>Huevos AA</h3>
             <p>Cartón de 30 unidades.</p>
             <div class="precio">$18.000</div>
@@ -67,8 +70,34 @@
     </section>
 
     <footer>
-        © 2026 Catálogo Digital - Proyecto SENA
+        © 2026 Catálogo Digital - Proyecto SENA | Conectado a Supabase
     </footer>
+
+    <!-- Cargar dinámicamente desde Supabase -->
+    <script type="module">
+        import { obtenerProductos } from './supabase.js';
+
+        async function cargarDestacados() {
+            try {
+                const res = await obtenerProductos();
+                if (res.productos && res.productos.length > 0) {
+                    const contenedor = document.getElementById('productos-destacados');
+                    const destacados = res.productos.slice(0, 4);
+                    contenedor.innerHTML = destacados.map(p => `
+                        <div class="card">
+                            <img src="${p.imagen_url || 'imagenes/arroz.jpg'}" alt="${p.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
+                            <h3>${p.nombre_producto}</h3>
+                            <p>${p.presentacion || ''}</p>
+                            <div class="precio">$${(Number(p.precio) || 0).toLocaleString('es-CO')}</div>
+                        </div>
+                    `).join('');
+                }
+            } catch (e) {
+                console.log('Usando destacados por defecto');
+            }
+        }
+        cargarDestacados();
+    </script>
 
 </body>
 
