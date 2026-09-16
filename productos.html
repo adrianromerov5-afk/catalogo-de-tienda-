@@ -32,7 +32,7 @@
             <button id="btn-buscar" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
 
-        <!-- Estado de Supabase y acciones -->
+        <!-- Estado de Supabase, Carrito y acciones -->
         <div class="header-actions">
             <div class="supabase-badge" id="badge-supabase" title="Estado de conexión con Supabase">
                 <span class="supabase-dot"></span>
@@ -40,6 +40,10 @@
             </div>
             <button class="btn-add-prod" id="btn-abrir-modal-crear">
                 <i class="fa-solid fa-plus"></i> Nuevo Producto
+            </button>
+            <button class="btn-header-cart" id="btn-abrir-carrito-header" title="Ver mi carrito de compras">
+                <i class="fa-solid fa-cart-shopping"></i> Carrito
+                <span class="cart-count-badge" id="cart-badge-header">0</span>
             </button>
         </div>
 
@@ -143,6 +147,46 @@
         </div>
     </div>
 
+    <!-- BOTÓN FLOTANTE DEL CARRITO -->
+    <button class="cart-floating-btn" id="btn-abrir-carrito-flotante" title="Ver carrito de compras">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>Carrito</span>
+        <span class="cart-count-badge" id="cart-badge-flotante">0</span>
+    </button>
+
+    <!-- PANEL LATERAL / DRAWER DEL CARRITO -->
+    <div class="cart-drawer-overlay" id="cart-overlay"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+            <h3><i class="fa-solid fa-basket-shopping"></i> Tu Carrito de Compras</h3>
+            <button class="cart-close-btn" id="btn-cerrar-carrito" title="Cerrar">&times;</button>
+        </div>
+
+        <div class="cart-items-container" id="cart-items-lista">
+            <!-- Items renderizados dinámicamente -->
+        </div>
+
+        <div class="cart-footer" id="cart-footer">
+            <div class="cart-summary-row">
+                <span>Total de productos:</span>
+                <strong id="cart-total-unidades">0 items</strong>
+            </div>
+            <div class="cart-summary-total">
+                <span>Total a pagar:</span>
+                <span class="total-amount" id="cart-total-precio">$0</span>
+            </div>
+            <div class="cart-actions">
+                <button class="btn-checkout-whatsapp" id="btn-pedir-whatsapp" title="Enviar pedido consolidado por WhatsApp">
+                    <i class="fa-brands fa-whatsapp" style="font-size:20px;"></i>
+                    <span>Realizar pedido por WhatsApp</span>
+                </button>
+                <button class="btn-clear-cart" id="btn-vaciar-carrito">
+                    <i class="fa-solid fa-trash-can"></i> Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- Notificación Toast -->
     <div class="toast-msg" id="toast-msg">
         <i class="fa-solid fa-circle-check" style="color:#34a853; font-size:18px;"></i>
@@ -159,6 +203,7 @@
 
         let listaProductos = [];
         let categoriaSeleccionada = 'todas';
+        let carrito = JSON.parse(localStorage.getItem('supermarket_carrito') || '[]');
 
         const contenedor = document.getElementById('contenedor-productos');
         const spinner = document.getElementById('spinner-carga');
@@ -168,13 +213,23 @@
         const toast = document.getElementById('toast-msg');
         const toastTexto = document.getElementById('toast-texto');
 
+        // Elementos del carrito
+        const cartOverlay = document.getElementById('cart-overlay');
+        const cartDrawer = document.getElementById('cart-drawer');
+        const cartItemsLista = document.getElementById('cart-items-lista');
+        const cartFooter = document.getElementById('cart-footer');
+        const cartBadgeHeader = document.getElementById('cart-badge-header');
+        const cartBadgeFlotante = document.getElementById('cart-badge-flotante');
+        const cartTotalUnidades = document.getElementById('cart-total-unidades');
+        const cartTotalPrecio = document.getElementById('cart-total-precio');
+
         function mostrarToast(mensaje, esError = false) {
             toastTexto.textContent = mensaje;
             toast.style.display = 'flex';
             toast.style.background = esError ? '#c5221f' : '#162033';
             setTimeout(() => {
                 toast.style.display = 'none';
-            }, 4000);
+            }, 3500);
         }
 
         function formatearPrecio(precio) {
@@ -182,6 +237,173 @@
             return '$' + num.toLocaleString('es-CO');
         }
 
+        // ==================== LÓGICA DEL CARRITO ====================
+        function guardarCarrito() {
+            localStorage.setItem('supermarket_carrito', JSON.stringify(carrito));
+            actualizarBadgesCarrito();
+            renderizarCarrito();
+        }
+
+        function actualizarBadgesCarrito() {
+            const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+            cartBadgeHeader.textContent = totalItems;
+            cartBadgeFlotante.textContent = totalItems;
+        }
+
+        function abrirCarrito() {
+            cartOverlay.style.display = 'block';
+            cartDrawer.classList.add('open');
+            renderizarCarrito();
+        }
+
+        function cerrarCarrito() {
+            cartOverlay.style.display = 'none';
+            cartDrawer.classList.remove('open');
+        }
+
+        function agregarAlCarrito(producto) {
+            const id = producto.id_producto;
+            const itemExistente = carrito.find(p => p.id_producto === id);
+
+            if (itemExistente) {
+                itemExistente.cantidad += 1;
+            } else {
+                carrito.push({
+                    id_producto: id,
+                    nombre_producto: producto.nombre_producto,
+                    presentacion: producto.presentacion || '',
+                    precio: Number(producto.precio) || 0,
+                    imagen_url: producto.imagen_url || 'imagenes/arroz.jpg',
+                    cantidad: 1
+                });
+            }
+
+            guardarCarrito();
+            mostrarToast(`¡${producto.nombre_producto} agregado al carrito!`);
+
+            // Feedback visual en el botón
+            const btn = document.getElementById(`btn-add-${id}`);
+            if (btn) {
+                const originalHtml = btn.innerHTML;
+                btn.classList.add('added');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Agregado';
+                setTimeout(() => {
+                    btn.classList.remove('added');
+                    btn.innerHTML = originalHtml;
+                }, 1200);
+            }
+        }
+
+        function cambiarCantidad(id, delta) {
+            const index = carrito.findIndex(p => p.id_producto === id);
+            if (index !== -1) {
+                carrito[index].cantidad += delta;
+                if (carrito[index].cantidad <= 0) {
+                    carrito.splice(index, 1);
+                }
+                guardarCarrito();
+            }
+        }
+
+        function eliminarDelCarrito(id) {
+            carrito = carrito.filter(p => p.id_producto !== id);
+            guardarCarrito();
+            mostrarToast('Producto eliminado del carrito');
+        }
+
+        function vaciarCarrito() {
+            if (carrito.length === 0) return;
+            carrito = [];
+            guardarCarrito();
+            mostrarToast('Se ha vaciado el carrito');
+        }
+
+        function renderizarCarrito() {
+            if (carrito.length === 0) {
+                cartItemsLista.innerHTML = `
+                    <div class="cart-empty">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <h4>Tu carrito está vacío</h4>
+                        <p>Explora los productos de nuestro supermercado y agrégalos para armar tu pedido.</p>
+                    </div>
+                `;
+                cartFooter.style.display = 'none';
+                return;
+            }
+
+            cartFooter.style.display = 'block';
+
+            let totalPagar = 0;
+            let totalUnidades = 0;
+
+            cartItemsLista.innerHTML = carrito.map(item => {
+                const subtotal = item.precio * item.cantidad;
+                totalPagar += subtotal;
+                totalUnidades += item.cantidad;
+
+                return `
+                    <div class="cart-item">
+                        <img src="${item.imagen_url}" alt="${item.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
+                        <div class="cart-item-details">
+                            <h4>${item.nombre_producto}</h4>
+                            <div class="cart-item-unit-price">${formatearPrecio(item.precio)} c/u</div>
+                            <div class="cart-item-subtotal">${formatearPrecio(subtotal)}</div>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="btn-qty" data-action="decrease" data-id="${item.id_producto}" title="Restar">-</button>
+                            <span class="cart-item-qty">${item.cantidad}</span>
+                            <button class="btn-qty" data-action="increase" data-id="${item.id_producto}" title="Aumentar">+</button>
+                            <button class="btn-remove-item" data-action="remove" data-id="${item.id_producto}" title="Eliminar del carrito">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            cartTotalUnidades.textContent = `${totalUnidades} ${totalUnidades === 1 ? 'producto' : 'productos'}`;
+            cartTotalPrecio.textContent = formatearPrecio(totalPagar);
+
+            // Escuchar botones dentro del carrito
+            cartItemsLista.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const accion = btn.getAttribute('data-action');
+                    const id = Number(btn.getAttribute('data-id'));
+
+                    if (accion === 'increase') cambiarCantidad(id, 1);
+                    if (accion === 'decrease') cambiarCantidad(id, -1);
+                    if (accion === 'remove') eliminarDelCarrito(id);
+                });
+            });
+        }
+
+        function enviarPedidoWhatsApp() {
+            if (carrito.length === 0) {
+                mostrarToast('El carrito está vacío. Agrega productos primero.', true);
+                return;
+            }
+
+            const total = carrito.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+            const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+
+            let mensaje = `👋 ¡Hola Supermarket Tame! Quisiera realizar el siguiente pedido desde su catálogo digital:\n\n`;
+
+            carrito.forEach((item, index) => {
+                const subtotal = item.precio * item.cantidad;
+                mensaje += `${index + 1}. *${item.nombre_producto}* (${item.presentacion || 'Unidad'})\n`;
+                mensaje += `   Cantidad: ${item.cantidad} x ${formatearPrecio(item.precio)} = ${formatearPrecio(subtotal)}\n\n`;
+            });
+
+            mensaje += `📦 *Total de artículos:* ${totalItems}\n`;
+            mensaje += `💰 *TOTAL A PAGAR:* ${formatearPrecio(total)}\n\n`;
+            mensaje += `📍 *Datos de entrega:* Por favor me confirman disponibilidad y el valor del domicilio. ¡Muchas gracias!`;
+
+            const telefono = '573223884271';
+            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+        }
+
+        // ==================== CATÁLOGO ====================
         function renderizarProductos(productosParaMostrar) {
             if (!productosParaMostrar || productosParaMostrar.length === 0) {
                 contenedor.innerHTML = `
@@ -195,16 +417,24 @@
             }
 
             contenedor.innerHTML = productosParaMostrar.map(prod => `
-                <div class="card" id="producto-${prod.id_producto || Math.random().toString(36).substr(2, 6)}">
+                <div class="card" id="producto-${prod.id_producto}">
                     <img src="${prod.imagen_url || 'imagenes/arroz.jpg'}" alt="${prod.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
                     <h3>${prod.nombre_producto}</h3>
                     <p>${prod.presentacion || 'Producto disponible'}</p>
                     <h2>${formatearPrecio(prod.precio)}</h2>
-                    <button onclick="window.open('https://wa.me/573223884271?text=Hola,%20quisiera%20pedir%20el%20producto:%20${encodeURIComponent(prod.nombre_producto)}%20(${encodeURIComponent(formatearPrecio(prod.precio))})', '_blank')">
-                        <i class="fa-brands fa-whatsapp"></i> Pedir producto
+                    <button class="btn-add-cart" id="btn-add-${prod.id_producto}" data-prod-id="${prod.id_producto}">
+                        <i class="fa-solid fa-cart-plus"></i> Agregar al carrito
                     </button>
                 </div>
             `).join('');
+
+            // Asignar eventos de clic a cada tarjeta
+            productosParaMostrar.forEach(prod => {
+                const btn = document.getElementById(`btn-add-${prod.id_producto}`);
+                if (btn) {
+                    btn.addEventListener('click', () => agregarAlCarrito(prod));
+                }
+            });
         }
 
         function filtrarProductos() {
@@ -319,6 +549,17 @@
                 mostrarToast(resp.error || 'No se pudo guardar. Revisa RLS en Supabase.', true);
             }
         });
+
+        // Escuchadores del Carrito de Compras
+        document.getElementById('btn-abrir-carrito-header').addEventListener('click', abrirCarrito);
+        document.getElementById('btn-abrir-carrito-flotante').addEventListener('click', abrirCarrito);
+        document.getElementById('btn-cerrar-carrito').addEventListener('click', cerrarCarrito);
+        cartOverlay.addEventListener('click', cerrarCarrito);
+        document.getElementById('btn-vaciar-carrito').addEventListener('click', vaciarCarrito);
+        document.getElementById('btn-pedir-whatsapp').addEventListener('click', enviarPedidoWhatsApp);
+
+        // Inicializar badges y estado del carrito
+        actualizarBadgesCarrito();
 
         // Carga inicial
         cargarCatalogo();
