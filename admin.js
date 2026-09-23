@@ -251,7 +251,8 @@ async function cargarProductos() {
             listaProductos = data.productos || [];
             statTotalProductos.textContent = listaProductos.length;
             badgeNumProductos.textContent = listaProductos.length;
-            renderizarProductos(listaProductos);
+            actualizarContadoresCategoriasAdmin();
+            aplicarFiltrosAdminProductos();
         } else {
             productosLista.innerHTML = `
                 <div class="empty-messages">
@@ -274,15 +275,361 @@ async function cargarProductos() {
     }
 }
 
+// ================= CLASIFICACIÓN DE CATEGORÍAS DE TIENDA =================
+const CATEGORIAS_ADMIN_CONFIG = [
+    { id: 'todas', nombre: 'Todas las Categorías', icono: 'fa-solid fa-border-all' },
+    { id: 'dulces', nombre: 'Dulces y Golosinas', icono: 'fa-solid fa-candy-cane' },
+    { id: 'bebidas', nombre: 'Bebidas y Gaseosas', icono: 'fa-solid fa-bottle-droplet' },
+    { id: 'snacks', nombre: 'Snacks y Pasabocas', icono: 'fa-solid fa-cookie' },
+    { id: 'lacteos', nombre: 'Lácteos y Huevos', icono: 'fa-solid fa-cheese' },
+    { id: 'granos', nombre: 'Granos y Cereales', icono: 'fa-solid fa-wheat-awn' },
+    { id: 'pastas_enlatados', nombre: 'Pastas y Enlatados', icono: 'fa-solid fa-fish' },
+    { id: 'despensa', nombre: 'Despensa y Condimentos', icono: 'fa-solid fa-box-open' },
+    { id: 'panaderia', nombre: 'Panadería y Galletas', icono: 'fa-solid fa-bread-slice' },
+    { id: 'carnes', nombre: 'Carnes y Embutidos', icono: 'fa-solid fa-drumstick-bite' },
+    { id: 'frutas_verduras', nombre: 'Frutas y Verduras', icono: 'fa-solid fa-apple-whole' },
+    { id: 'aseo', nombre: 'Aseo del Hogar', icono: 'fa-solid fa-soap' },
+    { id: 'cuidado_personal', nombre: 'Cuidado Personal', icono: 'fa-solid fa-pump-soap' }
+];
+
+function productoPerteneceACategoriaAdmin(p, categoria) {
+    if (!categoria || categoria === 'todas') return true;
+
+    const nombre = (p.nombre_producto || '').toLowerCase();
+    const pres = (p.presentacion || '').toLowerCase();
+    const texto = `${nombre} ${pres}`;
+
+    switch (categoria) {
+        case 'dulces':
+            return (
+                texto.includes('bon bon bum') ||
+                texto.includes('bonbonbum') ||
+                texto.includes('bombon') ||
+                texto.includes('bombón') ||
+                texto.includes('dulce') ||
+                texto.includes('golosina') ||
+                texto.includes('caramelo') ||
+                texto.includes('chupeta') ||
+                texto.includes('paleta') ||
+                texto.includes('chocolate') ||
+                texto.includes('chocolatina') ||
+                texto.includes('chocobreak') ||
+                texto.includes('jet') ||
+                texto.includes('nucita') ||
+                texto.includes('goma') ||
+                texto.includes('gomita') ||
+                texto.includes('chicle') ||
+                texto.includes('sparkies') ||
+                texto.includes('menta') ||
+                texto.includes('arequipe') ||
+                texto.includes('panelita') ||
+                texto.includes('masmelo') ||
+                texto.includes('marshmallow') ||
+                texto.includes('confite') ||
+                texto.includes('barrilete') ||
+                texto.includes('trululu') ||
+                texto.includes('trululú') ||
+                texto.includes('bubbaloo') ||
+                texto.includes('bianchi')
+            );
+
+        case 'bebidas':
+        case 'gaseosas':
+            return (
+                texto.includes('gaseosa') ||
+                texto.includes('coca') ||
+                texto.includes('cola') ||
+                texto.includes('quatro') ||
+                texto.includes('cuatro') ||
+                texto.includes('soda') ||
+                texto.includes('pepsi') ||
+                texto.includes('postobon') ||
+                texto.includes('postobón') ||
+                texto.includes('sprite') ||
+                texto.includes('fanta') ||
+                texto.includes('colombiana') ||
+                texto.includes('bretaña') ||
+                texto.includes('bretana') ||
+                texto.includes('ginger') ||
+                texto.includes('jugo') ||
+                texto.includes('hit') ||
+                texto.includes('refresco') ||
+                texto.includes('bebida') ||
+                texto.includes('agua') ||
+                texto.includes('brisa') ||
+                texto.includes('cristal') ||
+                texto.includes('malta') ||
+                texto.includes('cerveza') ||
+                texto.includes('poker') ||
+                texto.includes('aguila') ||
+                texto.includes('costeña') ||
+                texto.includes('costena') ||
+                texto.includes('corona') ||
+                texto.includes('hidratante') ||
+                texto.includes('gatorade') ||
+                texto.includes('squash') ||
+                texto.includes('speed max') ||
+                texto.includes('monster') ||
+                texto.includes('red bull') ||
+                texto.includes('hatsu') ||
+                texto.includes('energizante')
+            );
+
+        case 'snacks':
+            return (
+                texto.includes('snack') ||
+                texto.includes('pasaboca') ||
+                texto.includes('margarita') ||
+                texto.includes('papitas') ||
+                texto.includes('doritos') ||
+                texto.includes('de todito') ||
+                texto.includes('detodito') ||
+                texto.includes('cheetos') ||
+                texto.includes('chitos') ||
+                texto.includes('platanitos') ||
+                texto.includes('natuchips') ||
+                texto.includes('chicharron') ||
+                texto.includes('chicharrón') ||
+                texto.includes('maní') ||
+                texto.includes('mani') ||
+                texto.includes('tostacos') ||
+                texto.includes('popcorn') ||
+                texto.includes('crispetas') ||
+                texto.includes('palomitas') ||
+                texto.includes('nachos')
+            );
+
+        case 'lacteos':
+            return (
+                texto.includes('leche') ||
+                texto.includes('huevo') ||
+                texto.includes('queso') ||
+                texto.includes('yogurt') ||
+                texto.includes('kumis') ||
+                texto.includes('cuajada') ||
+                texto.includes('mantequilla') ||
+                texto.includes('crema de leche') ||
+                texto.includes('suero') ||
+                texto.includes('lecherita') ||
+                texto.includes('condensada') ||
+                texto.includes('alpina') ||
+                texto.includes('colanta') ||
+                texto.includes('alqueria') ||
+                texto.includes('alquería')
+            );
+
+        case 'granos':
+            return (
+                texto.includes('arroz') ||
+                texto.includes('frijol') ||
+                texto.includes('fríjol') ||
+                texto.includes('lenteja') ||
+                texto.includes('garbanzo') ||
+                texto.includes('arveja') ||
+                texto.includes('maiz') ||
+                texto.includes('maíz') ||
+                texto.includes('harina') ||
+                texto.includes('avena') ||
+                texto.includes('granola') ||
+                texto.includes('cereal') ||
+                texto.includes('chocapic') ||
+                texto.includes('zucaritas') ||
+                texto.includes('corn flakes')
+            );
+
+        case 'pastas_enlatados':
+            return (
+                texto.includes('pasta') ||
+                texto.includes('espagueti') ||
+                texto.includes('spaghetti') ||
+                texto.includes('macarrones') ||
+                texto.includes('conchitas') ||
+                texto.includes('fideos') ||
+                texto.includes('sopa') ||
+                texto.includes('doria') ||
+                texto.includes('atún') ||
+                texto.includes('atun') ||
+                texto.includes('sardina') ||
+                texto.includes('enlatado') ||
+                texto.includes('maicitos') ||
+                texto.includes('champiñones') ||
+                texto.includes('champiñon') ||
+                texto.includes('van camp') ||
+                texto.includes('vancamp')
+            );
+
+        case 'despensa':
+            return (
+                texto.includes('aceite') ||
+                texto.includes('azúcar') ||
+                texto.includes('azucar') ||
+                texto.includes('café') ||
+                texto.includes('cafe') ||
+                texto.includes('sal ') ||
+                texto.includes('sal marina') ||
+                texto.includes('panela') ||
+                texto.includes('salsa') ||
+                texto.includes('mayonesa') ||
+                texto.includes('ketchup') ||
+                texto.includes('mostaza') ||
+                texto.includes('caldo') ||
+                texto.includes('maggie') ||
+                texto.includes('ricostilla') ||
+                texto.includes('doña gallina') ||
+                texto.includes('color') ||
+                texto.includes('comino') ||
+                texto.includes('pimienta') ||
+                texto.includes('vinagre') ||
+                texto.includes('soya')
+            );
+
+        case 'panaderia':
+            return (
+                texto.includes('pan ') ||
+                texto.startsWith('pan') ||
+                texto.includes('pan tajado') ||
+                texto.includes('tostadas') ||
+                texto.includes('ponqué') ||
+                texto.includes('ponque') ||
+                texto.includes('chocoramo') ||
+                texto.includes('gala') ||
+                texto.includes('torta') ||
+                texto.includes('galleta') ||
+                texto.includes('galletas') ||
+                texto.includes('saltin') ||
+                texto.includes('saltín') ||
+                texto.includes('ducales') ||
+                texto.includes('oreo') ||
+                texto.includes('wafer') ||
+                texto.includes('festival') ||
+                texto.includes('craqueñas') ||
+                texto.includes('bimbo')
+            );
+
+        case 'carnes':
+            return (
+                texto.includes('carne') ||
+                texto.includes('pollo') ||
+                texto.includes('cerdo') ||
+                texto.includes('res') ||
+                texto.includes('pechuga') ||
+                texto.includes('salchicha') ||
+                texto.includes('jamón') ||
+                texto.includes('jamon') ||
+                texto.includes('mortadela') ||
+                texto.includes('chorizo') ||
+                texto.includes('salchichón') ||
+                texto.includes('salchichon') ||
+                texto.includes('zenu') ||
+                texto.includes('zenú') ||
+                texto.includes('ranchera') ||
+                texto.includes('tocineta') ||
+                texto.includes('pescado') ||
+                texto.includes('filete')
+            );
+
+        case 'frutas_verduras':
+            return (
+                texto.includes('fruta') ||
+                texto.includes('verdura') ||
+                texto.includes('tomate') ||
+                texto.includes('cebolla') ||
+                (texto.includes('papa') && !texto.includes('papel') && !texto.includes('margarita')) ||
+                texto.includes('plátano') ||
+                texto.includes('platano') ||
+                texto.includes('zanahoria') ||
+                texto.includes('limón') ||
+                texto.includes('limon') ||
+                texto.includes('manzana') ||
+                texto.includes('naranja') ||
+                texto.includes('banano') ||
+                texto.includes('aguacate') ||
+                texto.includes('cilantro') ||
+                texto.includes('lechuga')
+            );
+
+        case 'aseo':
+            return (
+                texto.includes('papel') ||
+                texto.includes('jabon') ||
+                texto.includes('jabón') ||
+                texto.includes('detergente') ||
+                texto.includes('ariel') ||
+                texto.includes('fab') ||
+                texto.includes('cloro') ||
+                texto.includes('límpido') ||
+                texto.includes('limpido') ||
+                texto.includes('varsol') ||
+                texto.includes('suavizante') ||
+                texto.includes('lavaplatos') ||
+                texto.includes('axion') ||
+                texto.includes('blanqueador') ||
+                texto.includes('desinfectante') ||
+                texto.includes('limpiador') ||
+                texto.includes('escoba') ||
+                texto.includes('trapero') ||
+                texto.includes('esponja') ||
+                texto.includes('bolsa de basura') ||
+                texto.includes('toalla de cocina')
+            );
+
+        case 'cuidado_personal':
+            return (
+                texto.includes('champú') ||
+                texto.includes('champu') ||
+                texto.includes('shampoo') ||
+                texto.includes('acondicionador') ||
+                texto.includes('crema dental') ||
+                texto.includes('colgate') ||
+                texto.includes('cepillo dental') ||
+                texto.includes('desodorante') ||
+                texto.includes('rexona') ||
+                texto.includes('toalla higiénica') ||
+                texto.includes('toalla higienica') ||
+                texto.includes('nosotras') ||
+                texto.includes('afeitadora') ||
+                texto.includes('prestobarba') ||
+                texto.includes('talco') ||
+                texto.includes('bloqueador')
+            );
+
+        default:
+            return true;
+    }
+}
+
+function obtenerInfoCategoriaAdmin(prod) {
+    for (const cat of CATEGORIAS_ADMIN_CONFIG) {
+        if (cat.id !== 'todas' && productoPerteneceACategoriaAdmin(prod, cat.id)) {
+            return cat;
+        }
+    }
+    return { id: 'despensa', nombre: 'Abarrotes y Despensa', icono: 'fa-solid fa-box-open' };
+}
+
+function actualizarContadoresCategoriasAdmin() {
+    CATEGORIAS_ADMIN_CONFIG.forEach(cat => {
+        const span = document.getElementById(`admin-count-${cat.id}`);
+        if (span) {
+            if (cat.id === 'todas') {
+                span.textContent = listaProductos.length;
+            } else {
+                const count = listaProductos.filter(p => productoPerteneceACategoriaAdmin(p, cat.id)).length;
+                span.textContent = count;
+            }
+        }
+    });
+}
+
 function renderizarProductos(productos) {
     if (!productos || productos.length === 0) {
         productosLista.innerHTML = `
             <div class="empty-messages">
                 <i class="fa-solid fa-box-open"></i>
-                <h4>No hay productos registrados</h4>
+                <h4>No hay productos en esta categoría</h4>
                 <p>Usa el botón <strong>Nuevo Producto</strong> para agregar artículos al catálogo de Supabase.</p>
                 <button class="btn-primary" style="margin-top:14px;" onclick="document.getElementById('btn-abrir-modal-prod-hero').click();">
-                    <i class="fa-solid fa-plus"></i> Publicar Primer Producto
+                    <i class="fa-solid fa-plus"></i> Publicar Nuevo Producto
                 </button>
             </div>
         `;
@@ -291,6 +638,7 @@ function renderizarProductos(productos) {
 
     productosLista.innerHTML = productos.map(prod => {
         const imgUrl = prod.imagen_url || 'imagenes/arroz.jpg';
+        const infoCat = obtenerInfoCategoriaAdmin(prod);
         return `
             <div class="product-admin-item" id="prod-item-${prod.id_producto}" data-id="${prod.id_producto}">
                 <img class="prod-admin-thumb" src="${escapeHTML(imgUrl)}" alt="${escapeHTML(prod.nombre_producto)}" onerror="this.src='imagenes/arroz.jpg'">
@@ -298,6 +646,7 @@ function renderizarProductos(productos) {
                     <div class="prod-admin-title-row">
                         <span class="prod-admin-name">${escapeHTML(prod.nombre_producto)}</span>
                         <span class="prod-admin-id-badge">ID #${prod.id_producto}</span>
+                        <span class="prod-admin-cat-badge"><i class="${infoCat.icono}"></i> ${infoCat.nombre}</span>
                     </div>
                     <span class="prod-admin-presentation">${escapeHTML(prod.presentacion || 'Sin presentación definida')}</span>
                     <span class="prod-admin-price">${formatearCOP(prod.precio)}</span>
@@ -324,19 +673,38 @@ function renderizarProductos(productos) {
     });
 }
 
-// Filtro de búsqueda de productos
-filtroBusquedaProductos.addEventListener('input', () => {
-    const q = filtroBusquedaProductos.value.toLowerCase().trim();
-    if (!q) {
-        renderizarProductos(listaProductos);
-        return;
+// ================= FILTRO POR CATEGORÍAS Y BÚSQUEDA DE PRODUCTOS =================
+let categoriaAdminSeleccionada = 'todas';
+
+function aplicarFiltrosAdminProductos() {
+    const q = (filtroBusquedaProductos.value || '').toLowerCase().trim();
+    let filtrados = listaProductos;
+
+    if (categoriaAdminSeleccionada !== 'todas') {
+        filtrados = filtrados.filter(p => productoPerteneceACategoriaAdmin(p, categoriaAdminSeleccionada));
     }
 
-    const filtrados = listaProductos.filter(p =>
-        (p.nombre_producto || '').toLowerCase().includes(q) ||
-        (p.presentacion || '').toLowerCase().includes(q)
-    );
+    if (q) {
+        filtrados = filtrados.filter(p =>
+            (p.nombre_producto || '').toLowerCase().includes(q) ||
+            (p.presentacion || '').toLowerCase().includes(q)
+        );
+    }
+
     renderizarProductos(filtrados);
+}
+
+// Filtro de búsqueda de productos
+filtroBusquedaProductos.addEventListener('input', aplicarFiltrosAdminProductos);
+
+// Botones de filtro por categoría en el Admin
+document.querySelectorAll('#admin-filtros-categorias .cat-pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#admin-filtros-categorias .cat-pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        categoriaAdminSeleccionada = btn.getAttribute('data-cat') || 'todas';
+        aplicarFiltrosAdminProductos();
+    });
 });
 
 btnRecargarProductos.addEventListener('click', () => {

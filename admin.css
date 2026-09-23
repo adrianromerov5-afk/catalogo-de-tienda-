@@ -862,6 +862,19 @@ body {
     font-family: monospace;
 }
 
+.prod-admin-cat-badge {
+    background: #e0f2fe;
+    color: #0369a1;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 2px 8px;
+    border-radius: 6px;
+    border: 1px solid #bae6fd;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+}
+
 .prod-admin-presentation {
     font-size: 13px;
     color: #64748b;
@@ -1044,6 +1057,47 @@ body {
     justify-content: center;
     font-size: 26px;
     margin: 0 auto 16px;
+}
+
+/* Filtros Rápidos por Categoría en Admin */
+.admin-category-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin: 14px 0 18px;
+    align-items: center;
+}
+
+.cat-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 7px 14px;
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    border-radius: 20px;
+    font-size: 13px;
+    font-weight: 500;
+    color: #475569;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cat-pill:hover {
+    background: #f1f5f9;
+    border-color: #94a3b8;
+    color: #0f172a;
+}
+
+.cat-pill.active {
+    background: #0284c7;
+    border-color: #0284c7;
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.25);
+}
+
+.cat-pill i {
+    font-size: 12px;
 }
 
 .admin-footer {

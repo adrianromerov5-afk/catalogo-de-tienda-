@@ -64,6 +64,48 @@ const PRODUCTOS_BASE = [
     presentacion: 'Paquete x4',
     precio: 6500,
     imagen_url: 'imagenes/papel.jpg'
+  },
+  {
+    nombre_producto: 'Gaseosa Coca-Cola',
+    presentacion: 'Botella 3 Litros',
+    precio: 12000,
+    imagen_url: 'https://megatiendas.vtexassets.com/arquivos/ids/174255/7702535024447.jpg?v=638697024878100000'
+  },
+  {
+    nombre_producto: 'Gaseosa Quatro Toronja',
+    presentacion: 'Botella 3 Litros',
+    precio: 11000,
+    imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/35048568/Quatro-Toronja-3-Litros-256395_a.jpg?v=639239483074500000'
+  },
+  {
+    nombre_producto: 'Gaseosa Colombiana Postobón',
+    presentacion: 'Botella 3.125 Litros',
+    precio: 9500,
+    imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596766/Gaseosa-COLOMBIANA-3125-ml-1051515_a.jpg?v=638476694806770000'
+  },
+  {
+    nombre_producto: 'Paquete Bon bon bum',
+    presentacion: '2.220 g',
+    precio: 10450,
+    imagen_url: 'https://colombinacontentmanager-prd.s3.us-east-1.amazonaws.com/Dulces/7702011023285_A1N1_es.jpg'
+  },
+  {
+    nombre_producto: 'Papas Margarita Pollo',
+    presentacion: 'Paquete 105 g',
+    precio: 4200,
+    imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/24368504/Papas-Fritas-Pollo-MARGARITA-105-g-309536_a.jpg?v=638575037198270000'
+  },
+  {
+    nombre_producto: 'Chocoramo Tradicional',
+    presentacion: 'Ponqué 65 g',
+    precio: 2800,
+    imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596796/Ponque-CHOCORAMO-65-g-1051543_a.jpg?v=638476695221970000'
+  },
+  {
+    nombre_producto: 'Pastas Doria Spaghetti',
+    presentacion: 'Paquete 500 g',
+    precio: 3900,
+    imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596765/Pasta-Spaghetti-DORIA-500-g-1051514_a.jpg?v=638476694793630000'
   }
 ];
 
