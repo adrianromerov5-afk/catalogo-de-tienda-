@@ -113,8 +113,26 @@ body {
 
 
 /* =========================
-   BUSCADOR
+   BUSCADOR / ATENCIÓN RÁPIDA
 ========================= */
+
+.header-contact-badge {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    background: #f0f7ff;
+    border: 1px solid #bfdbfe;
+    color: #0284c7;
+    padding: 8px 18px;
+    border-radius: 9999px;
+    font-size: 14px;
+    font-weight: 600;
+}
+
+.header-contact-badge i {
+    font-size: 16px;
+    color: #0284c7;
+}
 
 .search {
     width: 45%;
