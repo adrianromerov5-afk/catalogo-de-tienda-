@@ -38,9 +38,6 @@
                 <span class="supabase-dot"></span>
                 <span id="texto-estado-supabase">Supabase Conectado</span>
             </div>
-            <button class="btn-add-prod" id="btn-abrir-modal-crear">
-                <i class="fa-solid fa-plus"></i> Nuevo Producto
-            </button>
             <button class="btn-header-cart" id="btn-abrir-carrito-header" title="Ver mi carrito de compras">
                 <i class="fa-solid fa-cart-shopping"></i> Carrito
                 <span class="cart-count-badge" id="cart-badge-header">0</span>
@@ -105,49 +102,6 @@
 
     </main>
 
-    <!-- MODAL: AGREGAR PRODUCTO A SUPABASE -->
-    <div class="modal-overlay" id="modal-crear">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3><i class="fa-solid fa-cart-plus" style="color:#0d6efd;"></i> Agregar a Supabase</h3>
-                <button class="modal-close" id="btn-cerrar-modal">&times;</button>
-            </div>
-            <form id="form-nuevo-producto">
-                <div class="form-group">
-                    <label for="nuevo-nombre">Nombre del producto *</label>
-                    <input type="text" id="nuevo-nombre" placeholder="Ej. Lentejas Seleccionadas" required>
-                </div>
-                <div class="form-group">
-                    <label for="nueva-presentacion">Presentación / Descripción</label>
-                    <input type="text" id="nueva-presentacion" placeholder="Ej. Bolsa de 500 gramos" required>
-                </div>
-                <div class="form-group">
-                    <label for="nuevo-precio">Precio (COP) *</label>
-                    <input type="number" id="nuevo-precio" placeholder="Ej. 5200" min="0" required>
-                </div>
-                <div class="form-group">
-                    <label for="nueva-imagen">Imagen</label>
-                    <select id="nueva-imagen">
-                        <option value="imagenes/arroz.jpg">Arroz</option>
-                        <option value="imagenes/aceite.jpg">Aceite</option>
-                        <option value="imagenes/leche.jpg">Leche</option>
-                        <option value="imagenes/huevos.jpg">Huevos</option>
-                        <option value="imagenes/cafe.jpg">Café</option>
-                        <option value="imagenes/azucar.jpg">Azúcar</option>
-                        <option value="imagenes/atun.jpg">Atún</option>
-                        <option value="imagenes/papel.jpg">Papel</option>
-                    </select>
-                </div>
-                <div class="modal-actions">
-                    <button type="button" class="btn-secondary" id="btn-cancelar-crear">Cancelar</button>
-                    <button type="submit" class="btn-primary" id="btn-guardar-producto">
-                        <i class="fa-solid fa-floppy-disk"></i> Guardar en Supabase
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div>
-
     <!-- BOTÓN FLOTANTE DEL CARRITO -->
     <button class="cart-floating-btn" id="btn-abrir-carrito-flotante" title="Ver carrito de compras">
         <i class="fa-solid fa-cart-shopping"></i>
@@ -210,7 +164,6 @@
         const spinner = document.getElementById('spinner-carga');
         const inputBusqueda = document.getElementById('input-busqueda');
         const btnBuscar = document.getElementById('btn-buscar');
-        const modalCrear = document.getElementById('modal-crear');
         const toast = document.getElementById('toast-msg');
         const toastTexto = document.getElementById('toast-texto');
 
@@ -509,45 +462,6 @@
                 await cargarCatalogo();
             } else {
                 mostrarToast(res.error || 'Error al sincronizar catálogo con Supabase', true);
-            }
-        });
-
-        // Modal de Crear Producto
-        document.getElementById('btn-abrir-modal-crear').addEventListener('click', () => {
-            modalCrear.style.display = 'flex';
-        });
-        document.getElementById('btn-cerrar-modal').addEventListener('click', () => {
-            modalCrear.style.display = 'none';
-        });
-        document.getElementById('btn-cancelar-crear').addEventListener('click', () => {
-            modalCrear.style.display = 'none';
-        });
-
-        // Guardar nuevo producto
-        document.getElementById('form-nuevo-producto').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const btnGuardar = document.getElementById('btn-guardar-producto');
-            btnGuardar.disabled = true;
-            btnGuardar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
-
-            const nuevo = {
-                nombre_producto: document.getElementById('nuevo-nombre').value.trim(),
-                presentacion: document.getElementById('nueva-presentacion').value.trim(),
-                precio: Number(document.getElementById('nuevo-precio').value),
-                imagen_url: document.getElementById('nueva-imagen').value
-            };
-
-            const resp = await agregarProducto(nuevo);
-            btnGuardar.disabled = false;
-            btnGuardar.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar en Supabase';
-
-            if (resp.success) {
-                modalCrear.style.display = 'none';
-                document.getElementById('form-nuevo-producto').reset();
-                mostrarToast('¡Producto guardado exitosamente en Supabase!');
-                await cargarCatalogo();
-            } else {
-                mostrarToast(resp.error || 'No se pudo guardar. Revisa RLS en Supabase.', true);
             }
         });
 

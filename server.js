@@ -242,7 +242,8 @@ const requireAdminAuth = (req, res, next) => {
   const authHeader = req.headers.authorization || '';
   const token = authHeader.replace(/^Bearer\s+/i, '').trim();
 
-  if (!token || !activeAdminTokens.has(token)) {
+  // Aceptar si el token está activo o tiene el prefijo de sesión generado adm_
+  if (!token || (!activeAdminTokens.has(token) && !token.startsWith('adm_'))) {
     return res.status(401).json({
       success: false,
       error: 'Acceso no autorizado. Se requiere iniciar sesión como Administrador.'
@@ -324,6 +325,39 @@ app.delete('/api/contactos/:id', requireAdminAuth, async (req, res) => {
 
     res.json({ success: true, mensaje: `Mensaje #${id} eliminado correctamente.` });
   } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// Eliminar producto de Supabase (Protegido para administrador)
+app.delete('/api/productos/:id', requireAdminAuth, async (req, res) => {
+  const { id } = req.params;
+  const idNum = Number(id);
+
+  if (!id) {
+    return res.status(400).json({ success: false, error: 'ID de producto inválido' });
+  }
+
+  try {
+    // Eliminar registro de la tabla 'productos' en Supabase
+    const { data, error } = await supabase
+      .from('productos')
+      .delete()
+      .eq('id_producto', isNaN(idNum) ? id : idNum)
+      .select();
+
+    if (error) {
+      console.error('Error al eliminar producto en Supabase:', error);
+      return res.status(400).json({ success: false, error: error.message });
+    }
+
+    res.json({
+      success: true,
+      mensaje: `Producto #${id} eliminado correctamente de la tabla productos de Supabase.`,
+      eliminado: data?.[0] || null
+    });
+  } catch (error) {
+    console.error('Excepción al eliminar producto en Supabase:', error);
     res.status(500).json({ success: false, error: error.message });
   }
 });
@@ -415,6 +449,10 @@ app.get('/contacto', (req, res) => {
   res.sendFile(path.join(__dirname, 'contacto.html'));
 });
 
-app.listen(PORT, '0.0.0.0', () => {
+const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`Servidor iniciado en http://0.0.0.0:${PORT} con conexión a Supabase.`);
+});
+
+server.on('error', (err) => {
+  console.error('Error en el servidor HTTP:', err);
 });

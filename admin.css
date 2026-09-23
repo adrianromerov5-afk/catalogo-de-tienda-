@@ -744,6 +744,308 @@ body {
     background: #0b5ed7;
 }
 
+.btn-nav-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: #10b981;
+    color: #ffffff;
+    border: none;
+    padding: 7px 16px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 2px 6px rgba(16, 185, 129, 0.35);
+}
+
+.btn-nav-primary:hover {
+    background: #059669;
+    transform: translateY(-1px);
+}
+
+/* Pestañas del Panel Admin */
+.admin-tabs-nav {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    border-bottom: 2px solid #e2e8f0;
+    padding-bottom: 2px;
+}
+
+.tab-trigger {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 20px;
+    border: none;
+    background: transparent;
+    color: #64748b;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    border-radius: 8px 8px 0 0;
+    border-bottom: 3px solid transparent;
+    transition: all 0.2s ease;
+}
+
+.tab-trigger:hover {
+    color: #0d6efd;
+    background: #f1f5f9;
+}
+
+.tab-trigger.active {
+    color: #0d6efd;
+    border-bottom-color: #0d6efd;
+    background: #ffffff;
+}
+
+/* Lista de Productos en el Panel Admin */
+.products-admin-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.product-admin-item {
+    display: flex;
+    align-items: center;
+    gap: 18px;
+    padding: 14px 18px;
+    background: #ffffff;
+    border: 1px solid #e2e8f0;
+    border-radius: 12px;
+    transition: all 0.2s ease;
+}
+
+.product-admin-item:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+    border-color: #cbd5e1;
+}
+
+.prod-admin-thumb {
+    width: 64px;
+    height: 64px;
+    border-radius: 8px;
+    object-fit: cover;
+    background: #f8fafc;
+    border: 1px solid #e2e8f0;
+    flex-shrink: 0;
+}
+
+.prod-admin-details {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.prod-admin-title-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.prod-admin-name {
+    font-size: 16px;
+    font-weight: 600;
+    color: #1e293b;
+}
+
+.prod-admin-id-badge {
+    font-size: 11px;
+    background: #f1f5f9;
+    color: #64748b;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-family: monospace;
+}
+
+.prod-admin-presentation {
+    font-size: 13px;
+    color: #64748b;
+}
+
+.prod-admin-price {
+    font-size: 15px;
+    font-weight: 700;
+    color: #0d6efd;
+}
+
+.prod-admin-actions {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.btn-prod-delete {
+    background: #fee2e2;
+    color: #dc3545;
+    border: 1px solid #fecaca;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    cursor: pointer;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: all 0.2s;
+}
+
+.btn-prod-delete:hover {
+    background: #dc3545;
+    color: #ffffff;
+}
+
+.btn-prod-view-store {
+    background: #f1f5f9;
+    color: #334155;
+    text-decoration: none;
+    border: 1px solid #e2e8f0;
+    padding: 8px 12px;
+    border-radius: 6px;
+    font-size: 12px;
+    font-weight: 600;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-prod-view-store:hover {
+    background: #e2e8f0;
+}
+
+/* Modal y Campos para Nuevo Producto */
+.modal-dialog-prod {
+    max-width: 540px;
+    width: 95%;
+}
+
+.form-field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    margin-bottom: 16px;
+}
+
+.form-field label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #334155;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.form-field input {
+    padding: 10px 14px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 14px;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.form-field input:focus {
+    outline: none;
+    border-color: #0d6efd;
+    box-shadow: 0 0 0 3px rgba(13, 110, 253, 0.15);
+}
+
+.field-hint {
+    font-size: 12px;
+    color: #64748b;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    margin-top: 2px;
+}
+
+/* Previsualización en Vivo de la Imagen por URL */
+.image-preview-wrapper {
+    background: #f8fafc;
+    border: 1px dashed #cbd5e1;
+    border-radius: 8px;
+    padding: 12px;
+    margin-top: 8px;
+}
+
+.preview-title {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: #475569;
+    margin-bottom: 8px;
+}
+
+.image-preview-container {
+    min-height: 120px;
+    max-height: 160px;
+    background: #ffffff;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+    border: 1px solid #e2e8f0;
+}
+
+.image-preview-container img {
+    max-height: 150px;
+    max-width: 100%;
+    object-fit: contain;
+}
+
+.preview-empty {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: #94a3b8;
+    font-size: 13px;
+    text-align: center;
+    padding: 15px;
+}
+
+.preview-empty i {
+    font-size: 28px;
+}
+
+/* Modal de Confirmación de Eliminación */
+.modal-dialog-confirm {
+    max-width: 440px;
+    width: 92%;
+    border-radius: 16px;
+    overflow: hidden;
+}
+
+.modal-head-danger {
+    background: #fff5f5;
+    border-bottom: 1px solid #fee2e2;
+}
+
+.modal-head-danger h3 {
+    font-size: 16px;
+    color: #991b1b;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.confirm-icon-box {
+    width: 64px;
+    height: 64px;
+    border-radius: 50%;
+    background: #fee2e2;
+    color: #dc3545;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 26px;
+    margin: 0 auto 16px;
+}
+
 .admin-footer {
     text-align: center;
     padding: 24px;
@@ -761,12 +1063,21 @@ body {
     }
     .header-controls {
         width: 100%;
+        flex-direction: column;
     }
     .search-box {
         width: 100%;
     }
     .search-box input {
         width: 100%;
+    }
+    .product-admin-item {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+    .prod-admin-actions {
+        width: 100%;
+        justify-content: flex-end;
     }
     .message-item {
         flex-direction: column;

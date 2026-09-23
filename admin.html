@@ -7,6 +7,8 @@
 
     <!-- Google Fonts & Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <!-- Supabase JS Client -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <!-- Estilos específicos del panel de administración -->
     <link rel="stylesheet" href="admin.css">
 </head>
@@ -71,6 +73,9 @@
             </div>
 
             <div class="admin-nav-actions">
+                <button class="btn-nav-primary" id="btn-abrir-modal-prod-nav" title="Agregar nuevo producto al catálogo">
+                    <i class="fa-solid fa-circle-plus"></i> Nuevo Producto
+                </button>
                 <div class="user-chip">
                     <i class="fa-solid fa-shield-halved"></i>
                     <span>Administrador: <strong id="nombre-admin-activo">admin</strong></span>
@@ -98,12 +103,22 @@
 
             <!-- Banner de estadísticas -->
             <div class="stats-grid">
-                <div class="stat-card">
+                <div class="stat-card" id="card-stat-productos" style="cursor:pointer;" title="Ver productos">
                     <div class="stat-icon icon-blue">
+                        <i class="fa-solid fa-boxes-stacked"></i>
+                    </div>
+                    <div class="stat-info">
+                        <span class="stat-label">Total Productos</span>
+                        <strong class="stat-value" id="stat-total-productos">0</strong>
+                    </div>
+                </div>
+
+                <div class="stat-card" id="card-stat-mensajes" style="cursor:pointer;" title="Ver mensajes">
+                    <div class="stat-icon icon-purple">
                         <i class="fa-solid fa-inbox"></i>
                     </div>
                     <div class="stat-info">
-                        <span class="stat-label">Total de Mensajes</span>
+                        <span class="stat-label">Total Mensajes</span>
                         <strong class="stat-value" id="stat-total-mensajes">0</strong>
                     </div>
                 </div>
@@ -117,50 +132,92 @@
                         <strong class="stat-value" style="font-size:16px; color:#198754;">Supabase Conectado</strong>
                     </div>
                 </div>
-
-                <div class="stat-card">
-                    <div class="stat-icon icon-purple">
-                        <i class="fa-solid fa-user-lock"></i>
-                    </div>
-                    <div class="stat-info">
-                        <span class="stat-label">Sesión Activa</span>
-                        <strong class="stat-value" style="font-size:16px; color:#6f42c1;">Único Administrador</strong>
-                    </div>
-                </div>
             </div>
 
-            <!-- Cabecera de gestión y filtros -->
-            <div class="messages-header-card">
-                <div class="header-left">
-                    <h3><i class="fa-solid fa-envelope-open-text"></i> Buzón de Mensajes de Clientes</h3>
-                    <p>Consulta, responde y administra todos los mensajes enviados desde el formulario de contacto.</p>
-                </div>
-
-                <div class="header-controls">
-                    <div class="search-box">
-                        <i class="fa-solid fa-magnifying-glass"></i>
-                        <input type="text" id="filtro-busqueda-mensajes" placeholder="Buscar por cliente, correo o asunto...">
-                    </div>
-                    <button class="btn-refresh" id="btn-recargar-mensajes" title="Recargar bandeja de entrada">
-                        <i class="fa-solid fa-rotate-right"></i> Actualizar
-                    </button>
-                </div>
+            <!-- Pestañas de Navegación del Panel -->
+            <div class="admin-tabs-nav">
+                <button class="tab-trigger active" id="btn-tab-productos" data-tab="seccion-productos">
+                    <i class="fa-solid fa-boxes-stacked"></i> Catálogo de Productos (<span id="badge-num-productos">0</span>)
+                </button>
+                <button class="tab-trigger" id="btn-tab-mensajes" data-tab="seccion-mensajes">
+                    <i class="fa-solid fa-envelope-open-text"></i> Buzón de Mensajes (<span id="badge-num-mensajes">0</span>)
+                </button>
             </div>
 
-            <!-- Mensaje de confirmación o alerta -->
+            <!-- Mensaje de confirmación o alerta general -->
             <div class="alert-box" id="dashboard-alerta" style="display:none; margin-bottom:20px;"></div>
 
-            <!-- Tabla y lista interactiva de mensajes -->
-            <div class="messages-container" id="mensajes-contenedor">
-                <div class="loading-state" id="mensajes-cargando">
-                    <div class="spinner"></div>
-                    <p>Consultando mensajes desde la tabla contactos de Supabase...</p>
+            <!-- ==============================================
+                 SECCIÓN 1: GESTIÓN DE PRODUCTOS
+            =============================================== -->
+            <section class="admin-tab-section" id="seccion-productos">
+                <div class="messages-header-card">
+                    <div class="header-left">
+                        <h3><i class="fa-solid fa-boxes-stacked"></i> Gestión de Productos en Supabase</h3>
+                        <p>Publica nuevos productos indicando la URL de su imagen y administra el catálogo oficial en vivo.</p>
+                    </div>
+
+                    <div class="header-controls">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filtro-busqueda-productos" placeholder="Buscar por nombre o presentación...">
+                        </div>
+                        <button class="btn-refresh" id="btn-recargar-productos" title="Recargar catálogo de productos">
+                            <i class="fa-solid fa-rotate-right"></i> Actualizar
+                        </button>
+                        <button class="btn-primary" id="btn-abrir-modal-prod-hero" title="Crear nuevo producto">
+                            <i class="fa-solid fa-circle-plus"></i> Nuevo Producto
+                        </button>
+                    </div>
                 </div>
 
-                <div class="messages-list" id="mensajes-lista" style="display:none;">
-                    <!-- Se llena vía JavaScript -->
+                <!-- Lista / Tabla interactiva de productos -->
+                <div class="messages-container" id="productos-contenedor">
+                    <div class="loading-state" id="productos-cargando">
+                        <div class="spinner"></div>
+                        <p>Consultando catálogo desde la tabla productos en Supabase...</p>
+                    </div>
+
+                    <div class="products-admin-list" id="productos-lista" style="display:none;">
+                        <!-- Se genera dinámicamente vía JavaScript -->
+                    </div>
                 </div>
-            </div>
+            </section>
+
+
+            <!-- ==============================================
+                 SECCIÓN 2: BUZÓN DE MENSAJES DE CONTACTO
+            =============================================== -->
+            <section class="admin-tab-section" id="seccion-mensajes" style="display:none;">
+                <div class="messages-header-card">
+                    <div class="header-left">
+                        <h3><i class="fa-solid fa-envelope-open-text"></i> Buzón de Mensajes de Clientes</h3>
+                        <p>Consulta, responde y administra los mensajes enviados desde el formulario de contacto.</p>
+                    </div>
+
+                    <div class="header-controls">
+                        <div class="search-box">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                            <input type="text" id="filtro-busqueda-mensajes" placeholder="Buscar por cliente, correo o asunto...">
+                        </div>
+                        <button class="btn-refresh" id="btn-recargar-mensajes" title="Recargar bandeja de entrada">
+                            <i class="fa-solid fa-rotate-right"></i> Actualizar
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Lista de mensajes -->
+                <div class="messages-container" id="mensajes-contenedor">
+                    <div class="loading-state" id="mensajes-cargando">
+                        <div class="spinner"></div>
+                        <p>Consultando mensajes desde la tabla contactos de Supabase...</p>
+                    </div>
+
+                    <div class="messages-list" id="mensajes-lista" style="display:none;">
+                        <!-- Se llena vía JavaScript -->
+                    </div>
+                </div>
+            </section>
 
         </main>
 
@@ -189,6 +246,93 @@
                 <a href="#" class="btn-primary" id="btn-responder-email" target="_blank">
                     <i class="fa-solid fa-reply"></i> Responder por Correo
                 </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL PARA AGREGAR NUEVO PRODUCTO A SUPABASE -->
+    <div class="modal-overlay" id="modal-nuevo-producto">
+        <div class="modal-dialog modal-dialog-prod">
+            <div class="modal-head">
+                <h3><i class="fa-solid fa-cart-plus" style="color:#38bdf8;"></i> Publicar Nuevo Producto</h3>
+                <button class="btn-modal-close" id="btn-cerrar-modal-prod">&times;</button>
+            </div>
+            <form id="form-nuevo-producto">
+                <div class="modal-body">
+                    <div class="form-field">
+                        <label for="nuevo-prod-nombre"><i class="fa-solid fa-tag"></i> Nombre del Producto *</label>
+                        <input type="text" id="nuevo-prod-nombre" placeholder="Ej. Lentejas Seleccionadas Extra" required>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="nuevo-prod-presentacion"><i class="fa-solid fa-box"></i> Presentación / Descripción *</label>
+                        <input type="text" id="nuevo-prod-presentacion" placeholder="Ej. Bolsa de 500 gramos" required>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="nuevo-prod-precio"><i class="fa-solid fa-dollar-sign"></i> Precio en Pesos Colombianos (COP) *</label>
+                        <input type="number" id="nuevo-prod-precio" placeholder="Ej. 5400" min="0" required>
+                    </div>
+
+                    <div class="form-field">
+                        <label for="nuevo-prod-imagen"><i class="fa-solid fa-link"></i> URL de la Imagen del Producto *</label>
+                        <input type="url" id="nuevo-prod-imagen" placeholder="https://ejemplo.com/foto-producto.jpg" required autocomplete="off">
+                        <small class="field-hint">
+                            <i class="fa-solid fa-circle-info"></i> Pega el enlace web directo de la imagen (HTTP o HTTPS).
+                        </small>
+                    </div>
+
+                    <!-- Vista previa en vivo de la imagen por URL -->
+                    <div class="image-preview-wrapper">
+                        <span class="preview-title"><i class="fa-regular fa-image"></i> Vista Previa en Vivo:</span>
+                        <div class="image-preview-container" id="container-preview-imagen">
+                            <img id="img-preview-elemento" src="" alt="Vista previa de imagen" style="display:none;">
+                            <div id="img-preview-vacio" class="preview-empty">
+                                <i class="fa-regular fa-image"></i>
+                                <span>Pega una URL válida arriba para previsualizar</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="modal-foot">
+                    <button type="button" class="btn-secondary" id="btn-cancelar-modal-prod">Cancelar</button>
+                    <button type="submit" class="btn-primary" id="btn-guardar-producto-submit">
+                        <i class="fa-solid fa-floppy-disk"></i> Guardar en Supabase
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE ELIMINACIÓN EN SUPABASE (SIN CONFIRM NATIVO BLOQUEABLE) -->
+    <div class="modal-overlay" id="modal-confirmar-eliminar" style="display:none; z-index:9999;">
+        <div class="modal-dialog modal-dialog-confirm">
+            <div class="modal-head modal-head-danger">
+                <h3><i class="fa-solid fa-triangle-exclamation" style="color:#dc3545;"></i> Confirmar Eliminación en Supabase</h3>
+                <button class="btn-modal-close" id="btn-cerrar-modal-confirm">&times;</button>
+            </div>
+            <div class="modal-body" style="padding: 24px; text-align: center;">
+                <div class="confirm-icon-box">
+                    <i class="fa-solid fa-trash-can"></i>
+                </div>
+                <h4 id="confirm-item-titulo" style="margin: 0 0 10px; font-size: 18px; color: #1e293b;">¿Eliminar este producto?</h4>
+                <p id="confirm-item-detalle" style="margin: 0 0 16px; font-size: 14px; color: #64748b; line-height: 1.5;">
+                    Esta acción borrará este registro de forma permanente en la tabla de Supabase.
+                </p>
+                <div id="confirm-item-preview" style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:8px; padding:10px 14px; margin-bottom:14px; display:flex; align-items:center; gap:12px; text-align:left;">
+                    <img id="confirm-item-thumb" src="imagenes/arroz.jpg" style="width:48px; height:48px; object-fit:cover; border-radius:6px;">
+                    <div>
+                        <strong id="confirm-item-nombre-preview" style="display:block; font-size:14px; color:#1e293b;">Nombre</strong>
+                        <span id="confirm-item-id-preview" style="font-size:12px; color:#64748b;">ID #</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-foot" style="justify-content: center; gap: 12px; background: #f8fafc;">
+                <button type="button" class="btn-secondary" id="btn-cancelar-confirm">Cancelar</button>
+                <button type="button" class="btn-delete" id="btn-proceder-eliminar" style="background: #dc3545; color: #ffffff; border: none; padding: 10px 22px; font-weight: 600; cursor: pointer; border-radius: 8px;">
+                    <i class="fa-solid fa-trash"></i> Sí, Eliminar de Supabase
+                </button>
             </div>
         </div>
     </div>
