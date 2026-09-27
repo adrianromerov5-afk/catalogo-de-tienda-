@@ -1,0 +1,20 @@
+# Dependencias
+node_modules/
+
+# Entornos y secretos locales
+.env
+.env.local
+.env.*.local
+
+# Git
+.git/
+.gitignore
+
+# Archivos de AI Studio
+.aistudio/
+
+# Scripts SQL de configuración inicial de BD
+supabase_setup.sql
+
+# Bloqueos de paquetes secundarios
+bun.lock

@@ -113,6 +113,17 @@ const PRODUCTOS_BASE = [
 app.use(express.json());
 app.use(express.static(__dirname));
 
+// Soporte CORS para peticiones e integraciones externas
+app.use((req, res, next) => {
+  res.header('Access-Control-Allow-Origin', '*');
+  res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization');
+  if (req.method === 'OPTIONS') {
+    return res.sendStatus(200);
+  }
+  next();
+});
+
 // ==========================================
 // RUTAS API PARA SUPABASE
 // ==========================================
@@ -491,10 +502,20 @@ app.get('/contacto', (req, res) => {
   res.sendFile(path.join(__dirname, 'contacto.html'));
 });
 
-const server = app.listen(PORT, '0.0.0.0', () => {
-  console.log(`Servidor iniciado en http://0.0.0.0:${PORT} con conexión a Supabase.`);
+app.get('/admin', (req, res) => {
+  res.sendFile(path.join(__dirname, 'admin.html'));
 });
 
-server.on('error', (err) => {
-  console.error('Error en el servidor HTTP:', err);
-});
+// En entornos locales o contenedores tradicionales, iniciar el listener HTTP.
+// En Vercel Serverless Functions, la app es invocada directamente sin requerir app.listen.
+if (!process.env.VERCEL) {
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    console.log(`Servidor iniciado en http://0.0.0.0:${PORT} con conexión a Supabase.`);
+  });
+
+  server.on('error', (err) => {
+    console.error('Error en el servidor HTTP:', err);
+  });
+}
+
+export default app;
