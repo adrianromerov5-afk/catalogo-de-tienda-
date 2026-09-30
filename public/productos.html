@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Explorar Catálogo - Conectado a Supabase</title>
+
+    <link rel="stylesheet" href="productos.css">
+
+    <!-- Iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.6.0/css/all.min.css">
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+
+    <!-- Encabezado -->
+    <header>
+
+        <div class="logo">
+            <i class="fa-solid fa-store"></i>
+            <div>
+                <h2>CATÁLOGO</h2>
+                <span>Tienda Supermarket</span>
+            </div>
+        </div>
+
+        <!-- Buscador en tiempo real -->
+        <div class="buscador">
+            <input type="text" id="input-busqueda" placeholder="Buscar producto en la base de datos...">
+            <button id="btn-buscar" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+
+        <!-- Estado de Supabase, Carrito y acciones -->
+        <div class="header-actions">
+            <div class="supabase-badge" id="badge-supabase" title="Estado de conexión con Supabase">
+                <span class="supabase-dot"></span>
+                <span id="texto-estado-supabase">Supabase Conectado</span>
+            </div>
+            <button class="btn-header-cart" id="btn-abrir-carrito-header" title="Ver mi carrito de compras">
+                <i class="fa-solid fa-cart-shopping"></i> Carrito
+                <span class="cart-count-badge" id="cart-badge-header">0</span>
+            </button>
+        </div>
+
+    </header>
+
+    <!-- Menú -->
+    <nav>
+        <a href="inicio.html">Inicio</a>
+        <a href="productos.html" style="color: #0d6efd;">Productos</a>
+        <a href="nosotros.html">Nosotros</a>
+        <a href="contacto.html">Contáctanos</a>
+        <a href="admin.html" title="Panel de Administración"><i class="fa-solid fa-lock"></i> Admin</a>
+    </nav>
+
+    <!-- Título -->
+    <section class="titulo">
+        <h1>Explorar Catálogo</h1>
+        <p>Inicio > Catálogo digital conectado a Supabase (Tabla: productos)</p>
+    </section>
+
+    <main>
+
+        <!-- Sidebar de Categorías y Base de Datos -->
+        <aside>
+            <h2><i class="fa-solid fa-layer-group"></i> Categorías</h2>
+            <ul id="lista-categorias">
+                <li class="active-filter" data-categoria="todas">
+                    <span class="cat-label"><i class="fa-solid fa-border-all"></i> Todos los productos</span>
+                    <span class="cat-count" id="count-cat-todas">0</span>
+                </li>
+                <li data-categoria="dulces">
+                    <span class="cat-label"><i class="fa-solid fa-candy-cane"></i> Dulces y Golosinas</span>
+                    <span class="cat-count" id="count-cat-dulces">0</span>
+                </li>
+                <li data-categoria="bebidas">
+                    <span class="cat-label"><i class="fa-solid fa-bottle-droplet"></i> Bebidas y Gaseosas</span>
+                    <span class="cat-count" id="count-cat-bebidas">0</span>
+                </li>
+                <li data-categoria="snacks">
+                    <span class="cat-label"><i class="fa-solid fa-cookie"></i> Snacks y Pasabocas</span>
+                    <span class="cat-count" id="count-cat-snacks">0</span>
+                </li>
+                <li data-categoria="lacteos">
+                    <span class="cat-label"><i class="fa-solid fa-cheese"></i> Lácteos y Huevos</span>
+                    <span class="cat-count" id="count-cat-lacteos">0</span>
+                </li>
+                <li data-categoria="granos">
+                    <span class="cat-label"><i class="fa-solid fa-wheat-awn"></i> Granos y Cereales</span>
+                    <span class="cat-count" id="count-cat-granos">0</span>
+                </li>
+                <li data-categoria="pastas_enlatados">
+                    <span class="cat-label"><i class="fa-solid fa-fish"></i> Pastas y Enlatados</span>
+                    <span class="cat-count" id="count-cat-pastas_enlatados">0</span>
+                </li>
+                <li data-categoria="despensa">
+                    <span class="cat-label"><i class="fa-solid fa-box-open"></i> Despensa y Condimentos</span>
+                    <span class="cat-count" id="count-cat-despensa">0</span>
+                </li>
+                <li data-categoria="panaderia">
+                    <span class="cat-label"><i class="fa-solid fa-bread-slice"></i> Panadería y Galletas</span>
+                    <span class="cat-count" id="count-cat-panaderia">0</span>
+                </li>
+                <li data-categoria="carnes">
+                    <span class="cat-label"><i class="fa-solid fa-drumstick-bite"></i> Carnes y Embutidos</span>
+                    <span class="cat-count" id="count-cat-carnes">0</span>
+                </li>
+                <li data-categoria="frutas_verduras">
+                    <span class="cat-label"><i class="fa-solid fa-apple-whole"></i> Frutas y Verduras</span>
+                    <span class="cat-count" id="count-cat-frutas_verduras">0</span>
+                </li>
+                <li data-categoria="aseo">
+                    <span class="cat-label"><i class="fa-solid fa-soap"></i> Aseo del Hogar</span>
+                    <span class="cat-count" id="count-cat-aseo">0</span>
+                </li>
+                <li data-categoria="cuidado_personal">
+                    <span class="cat-label"><i class="fa-solid fa-pump-soap"></i> Cuidado Personal</span>
+                    <span class="cat-count" id="count-cat-cuidado_personal">0</span>
+                </li>
+            </ul>
+
+            <div class="aside-actions">
+                <button class="btn-sync" id="btn-sincronizar" title="Sincronizar productos iniciales en Supabase">
+                    <i class="fa-solid fa-database"></i> Sincronizar Catálogo
+                </button>
+            </div>
+        </aside>
+
+        <!-- Contenedor dinámico de Productos desde Supabase -->
+        <section class="productos" id="contenedor-productos">
+            <!-- Spinner de carga inicial -->
+            <div class="spinner-container" id="spinner-carga">
+                <div class="spinner"></div>
+                <p>Cargando catálogo desde la base de datos Supabase...</p>
+            </div>
+        </section>
+
+    </main>
+
+    <!-- BOTÓN FLOTANTE DEL CARRITO -->
+    <button class="cart-floating-btn" id="btn-abrir-carrito-flotante" title="Ver carrito de compras">
+        <i class="fa-solid fa-cart-shopping"></i>
+        <span>Carrito</span>
+        <span class="cart-count-badge" id="cart-badge-flotante">0</span>
+    </button>
+
+    <!-- PANEL LATERAL / DRAWER DEL CARRITO -->
+    <div class="cart-drawer-overlay" id="cart-overlay"></div>
+    <div class="cart-drawer" id="cart-drawer">
+        <div class="cart-header">
+            <h3><i class="fa-solid fa-basket-shopping"></i> Tu Carrito de Compras</h3>
+            <button class="cart-close-btn" id="btn-cerrar-carrito" title="Cerrar">&times;</button>
+        </div>
+
+        <div class="cart-items-container" id="cart-items-lista">
+            <!-- Items renderizados dinámicamente -->
+        </div>
+
+        <div class="cart-footer" id="cart-footer">
+            <div class="cart-summary-row">
+                <span>Total de productos:</span>
+                <strong id="cart-total-unidades">0 items</strong>
+            </div>
+            <div class="cart-summary-total">
+                <span>Total a pagar:</span>
+                <span class="total-amount" id="cart-total-precio">$0</span>
+            </div>
+            <div class="cart-actions">
+                <button class="btn-checkout-whatsapp" id="btn-pedir-whatsapp" title="Enviar pedido consolidado por WhatsApp">
+                    <i class="fa-brands fa-whatsapp" style="font-size:20px;"></i>
+                    <span>Realizar pedido por WhatsApp</span>
+                </button>
+                <button class="btn-clear-cart" id="btn-vaciar-carrito">
+                    <i class="fa-solid fa-trash-can"></i> Vaciar Carrito
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notificación Toast -->
+    <div class="toast-msg" id="toast-msg">
+        <i class="fa-solid fa-circle-check" style="color:#34a853; font-size:18px;"></i>
+        <span id="toast-texto">Operación realizada con éxito</span>
+    </div>
+
+    <footer>
+        <p>© 2026 Catálogo Digital - Proyecto SENA | Conectado a Supabase PostgreSQL</p>
+    </footer>
+
+    <!-- LÓGICA DE INTEGRACIÓN CON SUPABASE -->
+    <script type="module">
+        import { db, obtenerProductos, agregarProducto, sincronizarCatalogo } from './supabase.js';
+
+        let listaProductos = [];
+        let categoriaSeleccionada = 'todas';
+        let carrito = JSON.parse(localStorage.getItem('supermarket_carrito') || '[]');
+
+        const contenedor = document.getElementById('contenedor-productos');
+        const spinner = document.getElementById('spinner-carga');
+        const inputBusqueda = document.getElementById('input-busqueda');
+        const btnBuscar = document.getElementById('btn-buscar');
+        const toast = document.getElementById('toast-msg');
+        const toastTexto = document.getElementById('toast-texto');
+
+        // Elementos del carrito
+        const cartOverlay = document.getElementById('cart-overlay');
+        const cartDrawer = document.getElementById('cart-drawer');
+        const cartItemsLista = document.getElementById('cart-items-lista');
+        const cartFooter = document.getElementById('cart-footer');
+        const cartBadgeHeader = document.getElementById('cart-badge-header');
+        const cartBadgeFlotante = document.getElementById('cart-badge-flotante');
+        const cartTotalUnidades = document.getElementById('cart-total-unidades');
+        const cartTotalPrecio = document.getElementById('cart-total-precio');
+
+        function mostrarToast(mensaje, esError = false) {
+            toastTexto.textContent = mensaje;
+            toast.style.display = 'flex';
+            toast.style.background = esError ? '#c5221f' : '#162033';
+            setTimeout(() => {
+                toast.style.display = 'none';
+            }, 3500);
+        }
+
+        function formatearPrecio(precio) {
+            const num = Number(precio) || 0;
+            return '$' + num.toLocaleString('es-CO');
+        }
+
+        // ==================== LÓGICA DEL CARRITO ====================
+        function guardarCarrito() {
+            localStorage.setItem('supermarket_carrito', JSON.stringify(carrito));
+            actualizarBadgesCarrito();
+            renderizarCarrito();
+        }
+
+        function actualizarBadgesCarrito() {
+            const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+            cartBadgeHeader.textContent = totalItems;
+            cartBadgeFlotante.textContent = totalItems;
+        }
+
+        function abrirCarrito() {
+            cartOverlay.style.display = 'block';
+            cartDrawer.classList.add('open');
+            renderizarCarrito();
+        }
+
+        function cerrarCarrito() {
+            cartOverlay.style.display = 'none';
+            cartDrawer.classList.remove('open');
+        }
+
+        function agregarAlCarrito(producto) {
+            const id = producto.id_producto;
+            const itemExistente = carrito.find(p => p.id_producto === id);
+
+            if (itemExistente) {
+                itemExistente.cantidad += 1;
+            } else {
+                carrito.push({
+                    id_producto: id,
+                    nombre_producto: producto.nombre_producto,
+                    presentacion: producto.presentacion || '',
+                    precio: Number(producto.precio) || 0,
+                    imagen_url: producto.imagen_url || 'imagenes/arroz.jpg',
+                    cantidad: 1
+                });
+            }
+
+            guardarCarrito();
+            mostrarToast(`¡${producto.nombre_producto} agregado al carrito!`);
+
+            // Feedback visual en el botón
+            const btn = document.getElementById(`btn-add-${id}`);
+            if (btn) {
+                const originalHtml = btn.innerHTML;
+                btn.classList.add('added');
+                btn.innerHTML = '<i class="fa-solid fa-check"></i> Agregado';
+                setTimeout(() => {
+                    btn.classList.remove('added');
+                    btn.innerHTML = originalHtml;
+                }, 1200);
+            }
+        }
+
+        function cambiarCantidad(id, delta) {
+            const index = carrito.findIndex(p => p.id_producto === id);
+            if (index !== -1) {
+                carrito[index].cantidad += delta;
+                if (carrito[index].cantidad <= 0) {
+                    carrito.splice(index, 1);
+                }
+                guardarCarrito();
+            }
+        }
+
+        function eliminarDelCarrito(id) {
+            carrito = carrito.filter(p => p.id_producto !== id);
+            guardarCarrito();
+            mostrarToast('Producto eliminado del carrito');
+        }
+
+        function vaciarCarrito() {
+            if (carrito.length === 0) return;
+            carrito = [];
+            guardarCarrito();
+            mostrarToast('Se ha vaciado el carrito');
+        }
+
+        function renderizarCarrito() {
+            if (carrito.length === 0) {
+                cartItemsLista.innerHTML = `
+                    <div class="cart-empty">
+                        <i class="fa-solid fa-cart-shopping"></i>
+                        <h4>Tu carrito está vacío</h4>
+                        <p>Explora los productos de nuestro supermercado y agrégalos para armar tu pedido.</p>
+                    </div>
+                `;
+                cartFooter.style.display = 'none';
+                return;
+            }
+
+            cartFooter.style.display = 'block';
+
+            let totalPagar = 0;
+            let totalUnidades = 0;
+
+            cartItemsLista.innerHTML = carrito.map(item => {
+                const subtotal = item.precio * item.cantidad;
+                totalPagar += subtotal;
+                totalUnidades += item.cantidad;
+
+                return `
+                    <div class="cart-item">
+                        <img src="${item.imagen_url}" alt="${item.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
+                        <div class="cart-item-details">
+                            <h4>${item.nombre_producto}</h4>
+                            <div class="cart-item-unit-price">${formatearPrecio(item.precio)} c/u</div>
+                            <div class="cart-item-subtotal">${formatearPrecio(subtotal)}</div>
+                        </div>
+                        <div class="cart-item-controls">
+                            <button class="btn-qty" data-action="decrease" data-id="${item.id_producto}" title="Restar">-</button>
+                            <span class="cart-item-qty">${item.cantidad}</span>
+                            <button class="btn-qty" data-action="increase" data-id="${item.id_producto}" title="Aumentar">+</button>
+                            <button class="btn-remove-item" data-action="remove" data-id="${item.id_producto}" title="Eliminar del carrito">
+                                <i class="fa-solid fa-trash"></i>
+                            </button>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+
+            cartTotalUnidades.textContent = `${totalUnidades} ${totalUnidades === 1 ? 'producto' : 'productos'}`;
+            cartTotalPrecio.textContent = formatearPrecio(totalPagar);
+
+            // Escuchar botones dentro del carrito
+            cartItemsLista.querySelectorAll('button[data-action]').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const accion = btn.getAttribute('data-action');
+                    const id = Number(btn.getAttribute('data-id'));
+
+                    if (accion === 'increase') cambiarCantidad(id, 1);
+                    if (accion === 'decrease') cambiarCantidad(id, -1);
+                    if (accion === 'remove') eliminarDelCarrito(id);
+                });
+            });
+        }
+
+        function enviarPedidoWhatsApp() {
+            if (carrito.length === 0) {
+                mostrarToast('El carrito está vacío. Agrega productos primero.', true);
+                return;
+            }
+
+            const total = carrito.reduce((acc, item) => acc + (item.precio * item.cantidad), 0);
+            const totalItems = carrito.reduce((acc, item) => acc + item.cantidad, 0);
+
+            let mensaje = `👋 ¡Hola Supermarket Tame! Quisiera realizar el siguiente pedido desde su catálogo digital:\n\n`;
+
+            carrito.forEach((item, index) => {
+                const subtotal = item.precio * item.cantidad;
+                mensaje += `${index + 1}. *${item.nombre_producto}* (${item.presentacion || 'Unidad'})\n`;
+                mensaje += `   Cantidad: ${item.cantidad} x ${formatearPrecio(item.precio)} = ${formatearPrecio(subtotal)}\n\n`;
+            });
+
+            mensaje += `📦 *Total de artículos:* ${totalItems}\n`;
+            mensaje += `💰 *TOTAL A PAGAR:* ${formatearPrecio(total)}\n\n`;
+            mensaje += `📍 *Datos de entrega:* Por favor me confirman disponibilidad y el valor del domicilio. ¡Muchas gracias!`;
+
+            const telefono = '573223884271';
+            const url = `https://wa.me/${telefono}?text=${encodeURIComponent(mensaje)}`;
+            window.open(url, '_blank');
+        }
+
+        // ==================== CLASIFICACIÓN DE CATEGORÍAS ====================
+        const CATEGORIAS_CONFIG = [
+            { id: 'todas', nombre: 'Todos los productos', icono: 'fa-solid fa-border-all' },
+            { id: 'dulces', nombre: 'Dulces y Golosinas', icono: 'fa-solid fa-candy-cane' },
+            { id: 'bebidas', nombre: 'Bebidas y Gaseosas', icono: 'fa-solid fa-bottle-droplet' },
+            { id: 'snacks', nombre: 'Snacks y Pasabocas', icono: 'fa-solid fa-cookie' },
+            { id: 'lacteos', nombre: 'Lácteos y Huevos', icono: 'fa-solid fa-cheese' },
+            { id: 'granos', nombre: 'Granos y Cereales', icono: 'fa-solid fa-wheat-awn' },
+            { id: 'pastas_enlatados', nombre: 'Pastas y Enlatados', icono: 'fa-solid fa-fish' },
+            { id: 'despensa', nombre: 'Despensa y Condimentos', icono: 'fa-solid fa-box-open' },
+            { id: 'panaderia', nombre: 'Panadería y Galletas', icono: 'fa-solid fa-bread-slice' },
+            { id: 'carnes', nombre: 'Carnes y Embutidos', icono: 'fa-solid fa-drumstick-bite' },
+            { id: 'frutas_verduras', nombre: 'Frutas y Verduras', icono: 'fa-solid fa-apple-whole' },
+            { id: 'aseo', nombre: 'Aseo del Hogar', icono: 'fa-solid fa-soap' },
+            { id: 'cuidado_personal', nombre: 'Cuidado Personal', icono: 'fa-solid fa-pump-soap' }
+        ];
+
+        function productoPerteneceACategoria(p, categoria) {
+            if (!categoria || categoria === 'todas') return true;
+
+            const nombre = (p.nombre_producto || '').toLowerCase();
+            const pres = (p.presentacion || '').toLowerCase();
+            const texto = `${nombre} ${pres}`;
+
+            switch (categoria) {
+                case 'dulces':
+                    return (
+                        texto.includes('bon bon bum') ||
+                        texto.includes('bonbonbum') ||
+                        texto.includes('bombon') ||
+                        texto.includes('bombón') ||
+                        texto.includes('dulce') ||
+                        texto.includes('golosina') ||
+                        texto.includes('caramelo') ||
+                        texto.includes('chupeta') ||
+                        texto.includes('paleta') ||
+                        texto.includes('chocolate') ||
+                        texto.includes('chocolatina') ||
+                        texto.includes('chocobreak') ||
+                        texto.includes('jet') ||
+                        texto.includes('nucita') ||
+                        texto.includes('goma') ||
+                        texto.includes('gomita') ||
+                        texto.includes('chicle') ||
+                        texto.includes('sparkies') ||
+                        texto.includes('menta') ||
+                        texto.includes('arequipe') ||
+                        texto.includes('panelita') ||
+                        texto.includes('masmelo') ||
+                        texto.includes('marshmallow') ||
+                        texto.includes('confite') ||
+                        texto.includes('barrilete') ||
+                        texto.includes('trululu') ||
+                        texto.includes('trululú') ||
+                        texto.includes('bubbaloo') ||
+                        texto.includes('bianchi')
+                    );
+
+                case 'bebidas':
+                case 'gaseosas':
+                    return (
+                        texto.includes('gaseosa') ||
+                        texto.includes('coca') ||
+                        texto.includes('cola') ||
+                        texto.includes('quatro') ||
+                        texto.includes('cuatro') ||
+                        texto.includes('soda') ||
+                        texto.includes('pepsi') ||
+                        texto.includes('postobon') ||
+                        texto.includes('postobón') ||
+                        texto.includes('sprite') ||
+                        texto.includes('fanta') ||
+                        texto.includes('colombiana') ||
+                        texto.includes('bretaña') ||
+                        texto.includes('bretana') ||
+                        texto.includes('ginger') ||
+                        texto.includes('jugo') ||
+                        texto.includes('hit') ||
+                        texto.includes('refresco') ||
+                        texto.includes('bebida') ||
+                        texto.includes('agua') ||
+                        texto.includes('brisa') ||
+                        texto.includes('cristal') ||
+                        texto.includes('malta') ||
+                        texto.includes('cerveza') ||
+                        texto.includes('poker') ||
+                        texto.includes('aguila') ||
+                        texto.includes('costeña') ||
+                        texto.includes('costena') ||
+                        texto.includes('corona') ||
+                        texto.includes('hidratante') ||
+                        texto.includes('gatorade') ||
+                        texto.includes('squash') ||
+                        texto.includes('speed max') ||
+                        texto.includes('monster') ||
+                        texto.includes('red bull') ||
+                        texto.includes('hatsu') ||
+                        texto.includes('energizante')
+                    );
+
+                case 'snacks':
+                    return (
+                        texto.includes('snack') ||
+                        texto.includes('pasaboca') ||
+                        texto.includes('margarita') ||
+                        texto.includes('papitas') ||
+                        texto.includes('doritos') ||
+                        texto.includes('de todito') ||
+                        texto.includes('detodito') ||
+                        texto.includes('cheetos') ||
+                        texto.includes('chitos') ||
+                        texto.includes('platanitos') ||
+                        texto.includes('natuchips') ||
+                        texto.includes('chicharron') ||
+                        texto.includes('chicharrón') ||
+                        texto.includes('maní') ||
+                        texto.includes('mani') ||
+                        texto.includes('tostacos') ||
+                        texto.includes('popcorn') ||
+                        texto.includes('crispetas') ||
+                        texto.includes('palomitas') ||
+                        texto.includes('nachos')
+                    );
+
+                case 'lacteos':
+                    return (
+                        texto.includes('leche') ||
+                        texto.includes('huevo') ||
+                        texto.includes('queso') ||
+                        texto.includes('yogurt') ||
+                        texto.includes('kumis') ||
+                        texto.includes('cuajada') ||
+                        texto.includes('mantequilla') ||
+                        texto.includes('crema de leche') ||
+                        texto.includes('suero') ||
+                        texto.includes('lecherita') ||
+                        texto.includes('condensada') ||
+                        texto.includes('alpina') ||
+                        texto.includes('colanta') ||
+                        texto.includes('alqueria') ||
+                        texto.includes('alquería')
+                    );
+
+                case 'granos':
+                    return (
+                        texto.includes('arroz') ||
+                        texto.includes('frijol') ||
+                        texto.includes('fríjol') ||
+                        texto.includes('lenteja') ||
+                        texto.includes('garbanzo') ||
+                        texto.includes('arveja') ||
+                        texto.includes('maiz') ||
+                        texto.includes('maíz') ||
+                        texto.includes('harina') ||
+                        texto.includes('avena') ||
+                        texto.includes('granola') ||
+                        texto.includes('cereal') ||
+                        texto.includes('chocapic') ||
+                        texto.includes('zucaritas') ||
+                        texto.includes('corn flakes')
+                    );
+
+                case 'pastas_enlatados':
+                    return (
+                        texto.includes('pasta') ||
+                        texto.includes('espagueti') ||
+                        texto.includes('spaghetti') ||
+                        texto.includes('macarrones') ||
+                        texto.includes('conchitas') ||
+                        texto.includes('fideos') ||
+                        texto.includes('sopa') ||
+                        texto.includes('doria') ||
+                        texto.includes('atún') ||
+                        texto.includes('atun') ||
+                        texto.includes('sardina') ||
+                        texto.includes('enlatado') ||
+                        texto.includes('maicitos') ||
+                        texto.includes('champiñones') ||
+                        texto.includes('champiñon') ||
+                        texto.includes('van camp') ||
+                        texto.includes('vancamp')
+                    );
+
+                case 'despensa':
+                    return (
+                        texto.includes('aceite') ||
+                        texto.includes('azúcar') ||
+                        texto.includes('azucar') ||
+                        texto.includes('café') ||
+                        texto.includes('cafe') ||
+                        texto.includes('sal ') ||
+                        texto.includes('sal marina') ||
+                        texto.includes('panela') ||
+                        texto.includes('salsa') ||
+                        texto.includes('mayonesa') ||
+                        texto.includes('ketchup') ||
+                        texto.includes('mostaza') ||
+                        texto.includes('caldo') ||
+                        texto.includes('maggie') ||
+                        texto.includes('ricostilla') ||
+                        texto.includes('doña gallina') ||
+                        texto.includes('color') ||
+                        texto.includes('comino') ||
+                        texto.includes('pimienta') ||
+                        texto.includes('vinagre') ||
+                        texto.includes('soya')
+                    );
+
+                case 'panaderia':
+                    return (
+                        texto.includes('pan ') ||
+                        texto.startsWith('pan') ||
+                        texto.includes('pan tajado') ||
+                        texto.includes('tostadas') ||
+                        texto.includes('ponqué') ||
+                        texto.includes('ponque') ||
+                        texto.includes('chocoramo') ||
+                        texto.includes('gala') ||
+                        texto.includes('torta') ||
+                        texto.includes('galleta') ||
+                        texto.includes('galletas') ||
+                        texto.includes('saltin') ||
+                        texto.includes('saltín') ||
+                        texto.includes('ducales') ||
+                        texto.includes('oreo') ||
+                        texto.includes('wafer') ||
+                        texto.includes('festival') ||
+                        texto.includes('craqueñas') ||
+                        texto.includes('bimbo')
+                    );
+
+                case 'carnes':
+                    return (
+                        texto.includes('carne') ||
+                        texto.includes('pollo') ||
+                        texto.includes('cerdo') ||
+                        texto.includes('res') ||
+                        texto.includes('pechuga') ||
+                        texto.includes('salchicha') ||
+                        texto.includes('jamón') ||
+                        texto.includes('jamon') ||
+                        texto.includes('mortadela') ||
+                        texto.includes('chorizo') ||
+                        texto.includes('salchichón') ||
+                        texto.includes('salchichon') ||
+                        texto.includes('zenu') ||
+                        texto.includes('zenú') ||
+                        texto.includes('ranchera') ||
+                        texto.includes('tocineta') ||
+                        texto.includes('pescado') ||
+                        texto.includes('filete')
+                    );
+
+                case 'frutas_verduras':
+                    return (
+                        texto.includes('fruta') ||
+                        texto.includes('verdura') ||
+                        texto.includes('tomate') ||
+                        texto.includes('cebolla') ||
+                        (texto.includes('papa') && !texto.includes('papel') && !texto.includes('margarita')) ||
+                        texto.includes('plátano') ||
+                        texto.includes('platano') ||
+                        texto.includes('zanahoria') ||
+                        texto.includes('limón') ||
+                        texto.includes('limon') ||
+                        texto.includes('manzana') ||
+                        texto.includes('naranja') ||
+                        texto.includes('banano') ||
+                        texto.includes('aguacate') ||
+                        texto.includes('cilantro') ||
+                        texto.includes('lechuga')
+                    );
+
+                case 'aseo':
+                    return (
+                        texto.includes('papel') ||
+                        texto.includes('jabon') ||
+                        texto.includes('jabón') ||
+                        texto.includes('detergente') ||
+                        texto.includes('ariel') ||
+                        texto.includes('fab') ||
+                        texto.includes('cloro') ||
+                        texto.includes('límpido') ||
+                        texto.includes('limpido') ||
+                        texto.includes('varsol') ||
+                        texto.includes('suavizante') ||
+                        texto.includes('lavaplatos') ||
+                        texto.includes('axion') ||
+                        texto.includes('blanqueador') ||
+                        texto.includes('desinfectante') ||
+                        texto.includes('limpiador') ||
+                        texto.includes('escoba') ||
+                        texto.includes('trapero') ||
+                        texto.includes('esponja') ||
+                        texto.includes('bolsa de basura') ||
+                        texto.includes('toalla de cocina')
+                    );
+
+                case 'cuidado_personal':
+                    return (
+                        texto.includes('champú') ||
+                        texto.includes('champu') ||
+                        texto.includes('shampoo') ||
+                        texto.includes('acondicionador') ||
+                        texto.includes('crema dental') ||
+                        texto.includes('colgate') ||
+                        texto.includes('cepillo dental') ||
+                        texto.includes('desodorante') ||
+                        texto.includes('rexona') ||
+                        texto.includes('toalla higiénica') ||
+                        texto.includes('toalla higienica') ||
+                        texto.includes('nosotras') ||
+                        texto.includes('afeitadora') ||
+                        texto.includes('prestobarba') ||
+                        texto.includes('talco') ||
+                        texto.includes('bloqueador')
+                    );
+
+                default:
+                    return true;
+            }
+        }
+
+        function obtenerInfoCategoria(prod) {
+            for (const cat of CATEGORIAS_CONFIG) {
+                if (cat.id !== 'todas' && productoPerteneceACategoria(prod, cat.id)) {
+                    return cat;
+                }
+            }
+            return { id: 'despensa', nombre: 'Abarrotes y Despensa', icono: 'fa-solid fa-box-open' };
+        }
+
+        function actualizarContadoresCategorias() {
+            CATEGORIAS_CONFIG.forEach(cat => {
+                const el = document.getElementById(`count-cat-${cat.id}`);
+                if (el) {
+                    if (cat.id === 'todas') {
+                        el.textContent = listaProductos.length;
+                    } else {
+                        const count = listaProductos.filter(p => productoPerteneceACategoria(p, cat.id)).length;
+                        el.textContent = count;
+                    }
+                }
+            });
+        }
+
+        // ==================== CATÁLOGO ====================
+        function renderizarProductos(productosParaMostrar) {
+            if (!productosParaMostrar || productosParaMostrar.length === 0) {
+                contenedor.innerHTML = `
+                    <div style="grid-column: 1 / -1; text-align: center; padding: 40px; background: white; border-radius: 12px;">
+                        <i class="fa-solid fa-box-open" style="font-size: 48px; color: #aaa; margin-bottom: 15px;"></i>
+                        <h3 style="color: #16325c; margin-bottom: 8px;">No se encontraron productos</h3>
+                        <p style="color: #666;">No hay coincidencias con tu búsqueda en la categoría seleccionada.</p>
+                    </div>
+                `;
+                return;
+            }
+
+            contenedor.innerHTML = productosParaMostrar.map(prod => {
+                const infoCat = obtenerInfoCategoria(prod);
+                return `
+                    <div class="card" id="producto-${prod.id_producto}">
+                        <img src="${prod.imagen_url || 'imagenes/arroz.jpg'}" alt="${prod.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
+                        <span class="card-category-badge"><i class="${infoCat.icono}"></i> ${infoCat.nombre}</span>
+                        <h3>${prod.nombre_producto}</h3>
+                        <p>${prod.presentacion || 'Producto disponible'}</p>
+                        <h2>${formatearPrecio(prod.precio)}</h2>
+                        <button class="btn-add-cart" id="btn-add-${prod.id_producto}" data-prod-id="${prod.id_producto}">
+                            <i class="fa-solid fa-cart-plus"></i> Agregar al carrito
+                        </button>
+                    </div>
+                `;
+            }).join('');
+
+            // Asignar eventos de clic a cada tarjeta
+            productosParaMostrar.forEach(prod => {
+                const btn = document.getElementById(`btn-add-${prod.id_producto}`);
+                if (btn) {
+                    btn.addEventListener('click', () => agregarAlCarrito(prod));
+                }
+            });
+        }
+
+        function filtrarProductos() {
+            const query = inputBusqueda.value.toLowerCase().trim();
+            let filtrados = listaProductos;
+
+            if (categoriaSeleccionada !== 'todas') {
+                filtrados = filtrados.filter(p => productoPerteneceACategoria(p, categoriaSeleccionada));
+            }
+
+            if (query) {
+                filtrados = filtrados.filter(p => 
+                    (p.nombre_producto || '').toLowerCase().includes(query) ||
+                    (p.presentacion || '').toLowerCase().includes(query)
+                );
+            }
+
+            renderizarProductos(filtrados);
+        }
+
+        async function cargarCatalogo() {
+            try {
+                spinner.style.display = 'block';
+                const resultado = await obtenerProductos();
+                listaProductos = resultado.productos || [];
+
+                const badge = document.getElementById('badge-supabase');
+                const textoBadge = document.getElementById('texto-estado-supabase');
+
+                if (resultado.source === 'supabase') {
+                    textoBadge.textContent = `Supabase en vivo (${listaProductos.length})`;
+                } else {
+                    textoBadge.textContent = 'Supabase Conectado';
+                }
+
+                actualizarContadoresCategorias();
+                renderizarProductos(listaProductos);
+            } catch (err) {
+                console.error('Error al cargar productos:', err);
+                mostrarToast('Error al conectar con la base de datos', true);
+            }
+        }
+
+        // Búsqueda en tiempo real
+        inputBusqueda.addEventListener('input', filtrarProductos);
+        btnBuscar.addEventListener('click', filtrarProductos);
+
+        // Filtro por categorías
+        document.querySelectorAll('#lista-categorias li').forEach(item => {
+            item.addEventListener('click', () => {
+                document.querySelectorAll('#lista-categorias li').forEach(li => li.classList.remove('active-filter'));
+                item.classList.add('active-filter');
+                categoriaSeleccionada = item.getAttribute('data-categoria');
+                filtrarProductos();
+            });
+        });
+
+        // Sincronizar catálogo con Supabase
+        document.getElementById('btn-sincronizar').addEventListener('click', async () => {
+            mostrarToast('Sincronizando con Supabase...');
+            const res = await sincronizarCatalogo();
+            if (res.success) {
+                mostrarToast(res.mensaje || '¡Catálogo sincronizado exitosamente en Supabase!');
+                await cargarCatalogo();
+            } else {
+                mostrarToast(res.error || 'Error al sincronizar catálogo con Supabase', true);
+            }
+        });
+
+        // Escuchadores del Carrito de Compras
+        document.getElementById('btn-abrir-carrito-header').addEventListener('click', abrirCarrito);
+        document.getElementById('btn-abrir-carrito-flotante').addEventListener('click', abrirCarrito);
+        document.getElementById('btn-cerrar-carrito').addEventListener('click', cerrarCarrito);
+        cartOverlay.addEventListener('click', cerrarCarrito);
+        document.getElementById('btn-vaciar-carrito').addEventListener('click', vaciarCarrito);
+        document.getElementById('btn-pedir-whatsapp').addEventListener('click', enviarPedidoWhatsApp);
+
+        // Inicializar badges y estado del carrito
+        actualizarBadgesCarrito();
+
+        // Carga inicial
+        cargarCatalogo();
+    </script>
+
+</body>
+</html>

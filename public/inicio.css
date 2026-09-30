@@ -1,0 +1,84 @@
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    font-family:Arial, Helvetica, sans-serif;
+}
+
+body{
+    background:#fcfafa;
+}
+
+header{
+    background:#0e6d1b;
+    color:white;
+    padding:20px;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+nav a{
+    color:rgb(226, 220, 192);
+    text-decoration:none;
+    margin-left:20px;
+}
+
+.hero{
+    background:#088b43;
+    color:white;
+    text-align:center;
+    padding:60px 20px;
+}
+
+.hero button{
+    margin-top:20px;
+    padding:16px 25px;
+    border:none;
+    background:#c48603;
+    color:white;
+    border-radius:8px;
+    cursor:pointer;
+}
+
+.productos{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+    gap:20px;
+    padding:40px;
+}
+
+.card{
+    background:rgb(251, 249, 252);
+    border-radius:10px;
+    overflow:hidden;
+    box-shadow:0 0 10px rgba(0,0,0,.15);
+}
+
+.card img{
+    width:100%;
+    height:200px;
+    object-fit:contain;
+}
+
+.card h3{
+    padding:10px;
+}
+
+.card p{
+    padding:0 10px 10px;
+}
+
+.precio{
+    color:green;
+    font-size:22px;
+    font-weight:bold;
+    padding:10px;
+}
+
+footer{
+    background:#222;
+    color:white;
+    text-align:center;
+    padding:15px;
+}

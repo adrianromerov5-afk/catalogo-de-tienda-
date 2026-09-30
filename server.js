@@ -1,5 +1,6 @@
 import express from 'express';
 import path from 'path';
+import fs from 'fs';
 import { fileURLToPath } from 'url';
 import { createClient } from '@supabase/supabase-js';
 
@@ -111,7 +112,11 @@ const PRODUCTOS_BASE = [
 
 // Middlewares
 app.use(express.json());
+// Servir archivos estáticos desde public/ (estándar Vercel) y raíz como respaldo
+app.use(express.static(path.join(__dirname, 'public')));
 app.use(express.static(__dirname));
+app.use('/imagenes', express.static(path.join(__dirname, 'public', 'imagenes')));
+app.use('/imagenes', express.static(path.join(__dirname, 'imagenes')));
 
 // Soporte CORS para peticiones e integraciones externas
 app.use((req, res, next) => {
@@ -480,30 +485,38 @@ app.post('/api/seed', async (req, res) => {
 });
 
 // ==========================================
-// RUTAS HTML
+// RUTAS HTML (Compatibilidad public/ y raíz)
 // ==========================================
+const serveHtml = (res, filename) => {
+  const publicPath = path.join(__dirname, 'public', filename);
+  if (fs.existsSync(publicPath)) {
+    return res.sendFile(publicPath);
+  }
+  res.sendFile(path.join(__dirname, filename));
+};
+
 app.get('/', (req, res) => {
-  res.sendFile(path.join(__dirname, 'inicio.html'));
+  serveHtml(res, 'inicio.html');
 });
 
 app.get('/inicio', (req, res) => {
-  res.sendFile(path.join(__dirname, 'inicio.html'));
+  serveHtml(res, 'inicio.html');
 });
 
 app.get('/productos', (req, res) => {
-  res.sendFile(path.join(__dirname, 'productos.html'));
+  serveHtml(res, 'productos.html');
 });
 
 app.get('/nosotros', (req, res) => {
-  res.sendFile(path.join(__dirname, 'nosotros.html'));
+  serveHtml(res, 'nosotros.html');
 });
 
 app.get('/contacto', (req, res) => {
-  res.sendFile(path.join(__dirname, 'contacto.html'));
+  serveHtml(res, 'contacto.html');
 });
 
 app.get('/admin', (req, res) => {
-  res.sendFile(path.join(__dirname, 'admin.html'));
+  serveHtml(res, 'admin.html');
 });
 
 // En entornos locales o contenedores tradicionales, iniciar el listener HTTP.

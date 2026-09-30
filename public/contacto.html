@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Contáctanos - Supermarket Tame</title>
+
+    <!-- Iconos -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css">
+
+    <!-- CSS -->
+    <link rel="stylesheet" href="contacto.css">
+
+    <!-- Supabase CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <!-- =========================
+         ENCABEZADO
+    ========================== -->
+
+    <header>
+
+        <div class="header-main">
+
+            <!-- LOGO -->
+
+            <div class="logo">
+
+                <div class="logo-icon">
+                    <i class="fa-solid fa-bag-shopping"></i>
+                </div>
+
+                <div>
+                    <h1>CATÁLOGO</h1>
+                    <p>SUPERMARKET TAME</p>
+                </div>
+
+            </div>
+
+            <!-- ATENCIÓN RÁPIDA -->
+            <div class="header-contact-badge">
+                <i class="fa-solid fa-headset"></i>
+                <span>Atención al Cliente</span>
+            </div>
+
+        </div>
+
+    <!-- =========================
+             MENÚ
+        ========================== -->
+
+        <nav>
+            <a href="inicio.html">Inicio</a>
+            <a href="productos.html">Productos</a>
+            <a href="nosotros.html">Nosotros</a>
+            <a href="#" class="active">Contáctanos</a>
+            <a href="admin.html" title="Panel de Administración"><i class="fa-solid fa-lock"></i> Admin</a>
+        </nav>
+
+    </header>
+
+
+    <!-- =========================
+         CONTENIDO PRINCIPAL
+    ========================== -->
+
+    <main>
+
+
+        <!-- TÍTULO -->
+
+        <section class="contact-title">
+
+            <h2>Contáctanos</h2>
+
+            <div class="line"></div>
+
+            <p>
+                Estamos aquí para ayudarte. Si tienes preguntas,
+                sugerencias o necesitas soporte, no dudes en
+                comunicarte con nosotros.
+            </p>
+
+        </section>
+
+
+        <!-- =========================
+             INFORMACIÓN + FORMULARIO
+        ========================== -->
+
+        <section class="contact-container">
+
+
+            <!-- INFORMACIÓN DE CONTACTO -->
+
+            <div class="contact-info">
+
+                <h2>
+                    Información de contacto
+                </h2>
+
+
+                <!-- Dirección -->
+
+                <div class="info-item">
+
+                    <div class="info-icon">
+                        <i class="fa-solid fa-location-dot"></i>
+                    </div>
+
+                    <div>
+
+                        <h3>Dirección</h3>
+
+                        <p>
+                            Carrera 6 # 10-35,
+                            Tame, Arauca
+                        </p>
+
+                        <p>
+                            Colombia
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Teléfono -->
+
+                <div class="info-item">
+
+                    <div class="info-icon">
+                        <i class="fa-solid fa-phone"></i>
+                    </div>
+
+                    <div>
+
+                        <h3>Teléfono</h3>
+
+                        <p>
+                            322 388 4271
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Correo -->
+
+                <div class="info-item">
+
+                    <div class="info-icon">
+                        <i class="fa-solid fa-envelope"></i>
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Correo electrónico
+                        </h3>
+
+                        <p>
+                            Supermarketcom@gmail.com
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- Horario -->
+
+                <div class="info-item">
+
+                    <div class="info-icon">
+                        <i class="fa-regular fa-clock"></i>
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            Horario de atención
+                        </h3>
+
+                        <p>
+                            Lunes a Sábado
+                        </p>
+
+                        <p>
+                            8:00 a.m. - 6:00 p.m.
+                        </p>
+
+                    </div>
+
+                </div>
+
+
+                <!-- WhatsApp -->
+
+                <div class="info-item">
+
+                    <div class="info-icon">
+                        <i class="fa-brands fa-whatsapp"></i>
+                    </div>
+
+                    <div>
+
+                        <h3>
+                            WhatsApp
+                        </h3>
+
+                        <p>
+                            322 388 4271
+                        </p>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- =========================
+                 FORMULARIO
+            ========================== -->
+
+            <div class="contact-form">
+
+                <h2>
+                    Envíanos un mensaje
+                </h2>
+                <p style="font-size: 13px; color: #666; margin-bottom: 18px;">
+                    <i class="fa-solid fa-cloud-arrow-up" style="color:#0d6efd;"></i> Los mensajes se registran en la tabla <code>contactos</code> de Supabase.
+                </p>
+
+
+                <form id="form-contacto">
+
+
+                    <!-- Nombre -->
+
+                    <div class="form-row">
+
+                        <input
+                            type="text"
+                            id="contacto-nombre"
+                            name="nombre_completo"
+                            placeholder="Nombre completo"
+                            required
+                        >
+
+                        <input
+                            type="email"
+                            id="contacto-email"
+                            name="correo_electronico"
+                            placeholder="Correo electrónico"
+                            required
+                        >
+
+                    </div>
+
+
+                    <!-- Asunto -->
+
+                    <input
+                        type="text"
+                        id="contacto-asunto"
+                        name="asunto"
+                        placeholder="Asunto"
+                        required
+                    >
+
+
+                    <!-- Mensaje -->
+
+                    <textarea
+                        id="contacto-mensaje"
+                        name="mensaje"
+                        placeholder="Mensaje"
+                        required
+                    ></textarea>
+
+
+                    <!-- Botón -->
+
+                    <button
+                        type="submit"
+                        id="btn-enviar-contacto"
+                        class="send-button"
+                    >
+
+                        <i class="fa-regular fa-paper-plane"></i>
+
+                        <span>Enviar mensaje</span>
+
+                    </button>
+
+                    <!-- Mensaje de estado -->
+                    <div id="contacto-alerta" style="display: none; margin-top: 18px; padding: 14px 18px; border-radius: 8px; font-size: 14px; line-height: 1.5;"></div>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <!-- =========================
+             WHATSAPP
+        ========================== -->
+
+        <section class="whatsapp-box">
+
+            <div class="whatsapp-icon">
+
+                <i class="fa-brands fa-whatsapp"></i>
+
+            </div>
+
+
+            <div class="whatsapp-text">
+
+                <h3>
+                    ¿Necesitas ayuda rápida?
+                </h3>
+
+                <p>
+                    Escríbenos por WhatsApp y nuestro equipo
+                    te atenderá lo antes posible.
+                </p>
+
+            </div>
+
+
+            <a
+                href="#"
+                class="whatsapp-button"
+            >
+
+                <i class="fa-brands fa-whatsapp"></i>
+
+                Escribir por WhatsApp
+
+            </a>
+
+        </section>
+
+    </main>
+
+
+    <!-- =========================
+         FOOTER
+    ========================== -->
+
+    <footer>
+
+        <div class="footer-left">
+
+            <p>
+                © 2026 Catálogo Digital - Proyecto SENA
+            </p>
+
+            <p>
+                Centro de Gestión y Desarrollo Agroindustrial
+            </p>
+
+        </div>
+
+
+        <div class="footer-right">
+
+            <a href="#">
+                Términos y condiciones
+            </a>
+
+            <span>|</span>
+
+            <a href="#">
+                Política de privacidad
+            </a>
+
+        </div>
+
+    </footer>
+
+    <!-- LÓGICA DE ENVÍO A SUPABASE -->
+    <script type="module">
+        import { guardarContacto } from './supabase.js';
+
+        const form = document.getElementById('form-contacto');
+        const btn = document.getElementById('btn-enviar-contacto');
+        const alerta = document.getElementById('contacto-alerta');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            btn.disabled = true;
+            const originalBtnHtml = btn.innerHTML;
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando en Supabase...';
+            alerta.style.display = 'none';
+
+            const payload = {
+                nombre_completo: document.getElementById('contacto-nombre').value.trim(),
+                correo_electronico: document.getElementById('contacto-email').value.trim(),
+                asunto: document.getElementById('contacto-asunto').value.trim(),
+                mensaje: document.getElementById('contacto-mensaje').value.trim()
+            };
+
+            const resp = await guardarContacto(payload);
+
+            btn.disabled = false;
+            btn.innerHTML = originalBtnHtml;
+
+            if (resp.success) {
+                alerta.style.display = 'block';
+                alerta.style.background = '#e6f4ea';
+                alerta.style.color = '#137333';
+                alerta.style.border = '1px solid #ceead6';
+                alerta.innerHTML = `
+                    <strong><i class="fa-solid fa-circle-check"></i> ¡Mensaje enviado con éxito!</strong><br>
+                    Tu consulta ha sido registrada correctamente en la base de datos Supabase (tabla <code>contactos</code>).
+                `;
+                form.reset();
+            } else {
+                alerta.style.display = 'block';
+                alerta.style.background = '#fce8e6';
+                alerta.style.color = '#c5221f';
+                alerta.style.border = '1px solid #fad2cf';
+                alerta.innerHTML = `
+                    <strong><i class="fa-solid fa-circle-exclamation"></i> Aviso de envío:</strong><br>
+                    ${resp.error || 'No se pudo registrar el contacto.'}
+                    ${resp.hint ? `<br><small style="color:#666;">Pista: ${resp.hint}</small>` : ''}
+                `;
+            }
+        });
+    </script>
+
+</body>
+</html>
