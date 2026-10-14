@@ -19,90 +19,105 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_KEY);
 // Productos de referencia
 const PRODUCTOS_BASE = [
   {
+    id_producto: 1,
     nombre_producto: 'Arroz Diana',
     presentacion: 'Presentación 1 Kg.',
     precio: 4500,
     imagen_url: 'imagenes/arroz.jpg'
   },
   {
+    id_producto: 2,
     nombre_producto: 'Aceite Premier',
     presentacion: 'Botella 900 ml.',
     precio: 12000,
     imagen_url: 'imagenes/aceite.jpg'
   },
   {
+    id_producto: 3,
     nombre_producto: 'Leche Entera',
     presentacion: 'Bolsa 1 Litro.',
     precio: 3800,
     imagen_url: 'imagenes/leche.jpg'
   },
   {
+    id_producto: 4,
     nombre_producto: 'Huevos AA',
     presentacion: '30 Unidades.',
     precio: 18000,
     imagen_url: 'imagenes/huevos.jpg'
   },
   {
+    id_producto: 5,
     nombre_producto: 'Café Sello Rojo',
     presentacion: '250 gramos.',
     precio: 7500,
     imagen_url: 'imagenes/cafe.jpg'
   },
   {
+    id_producto: 6,
     nombre_producto: 'Azúcar Incauca',
     presentacion: '1 Kg.',
     precio: 3200,
     imagen_url: 'imagenes/azucar.jpg'
   },
   {
+    id_producto: 7,
     nombre_producto: "Atún Van Camp's",
     presentacion: '160 gramos.',
     precio: 6000,
     imagen_url: 'imagenes/atun.jpg'
   },
   {
+    id_producto: 8,
     nombre_producto: 'Papel Higiénico',
     presentacion: 'Paquete x4',
     precio: 6500,
     imagen_url: 'imagenes/papel.jpg'
   },
   {
+    id_producto: 9,
     nombre_producto: 'Gaseosa Coca-Cola',
     presentacion: 'Botella 3 Litros',
     precio: 12000,
     imagen_url: 'https://megatiendas.vtexassets.com/arquivos/ids/174255/7702535024447.jpg?v=638697024878100000'
   },
   {
+    id_producto: 10,
     nombre_producto: 'Gaseosa Quatro Toronja',
     presentacion: 'Botella 3 Litros',
     precio: 11000,
     imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/35048568/Quatro-Toronja-3-Litros-256395_a.jpg?v=639239483074500000'
   },
   {
+    id_producto: 11,
     nombre_producto: 'Gaseosa Colombiana Postobón',
     presentacion: 'Botella 3.125 Litros',
     precio: 9500,
     imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596766/Gaseosa-COLOMBIANA-3125-ml-1051515_a.jpg?v=638476694806770000'
   },
   {
+    id_producto: 12,
     nombre_producto: 'Paquete Bon bon bum',
     presentacion: '2.220 g',
     precio: 10450,
     imagen_url: 'https://colombinacontentmanager-prd.s3.us-east-1.amazonaws.com/Dulces/7702011023285_A1N1_es.jpg'
   },
   {
+    id_producto: 13,
     nombre_producto: 'Papas Margarita Pollo',
     presentacion: 'Paquete 105 g',
     precio: 4200,
     imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/24368504/Papas-Fritas-Pollo-MARGARITA-105-g-309536_a.jpg?v=638575037198270000'
   },
   {
+    id_producto: 14,
     nombre_producto: 'Chocoramo Tradicional',
     presentacion: 'Ponqué 65 g',
     precio: 2800,
     imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596796/Ponque-CHOCORAMO-65-g-1051543_a.jpg?v=638476695221970000'
   },
   {
+    id_producto: 15,
     nombre_producto: 'Pastas Doria Spaghetti',
     presentacion: 'Paquete 500 g',
     precio: 3900,
@@ -165,6 +180,12 @@ app.get('/api/status', async (req, res) => {
 
 // Listar productos desde Supabase
 app.get('/api/productos', async (req, res) => {
+  const garantizarIds = (lista) => (lista || []).map((p, idx) => ({
+    ...p,
+    id_producto: p.id_producto !== undefined && p.id_producto !== null ? p.id_producto : (idx + 1),
+    precio: Number(p.precio) || 0
+  }));
+
   try {
     const { data, error } = await supabase
       .from('productos')
@@ -176,7 +197,7 @@ app.get('/api/productos', async (req, res) => {
       // Retornar catálogo base con notificación
       return res.json({
         source: 'base',
-        productos: PRODUCTOS_BASE,
+        productos: garantizarIds(PRODUCTOS_BASE),
         supabaseConnected: false,
         error: error.message
       });
@@ -186,7 +207,7 @@ app.get('/api/productos', async (req, res) => {
       // Si la tabla existe en Supabase pero aún no tiene registros
       return res.json({
         source: 'base',
-        productos: PRODUCTOS_BASE,
+        productos: garantizarIds(PRODUCTOS_BASE),
         supabaseConnected: true,
         countInSupabase: 0,
         mensaje: 'Tabla productos conectada en Supabase (sin registros aún, mostrando catálogo inicial)'
@@ -195,14 +216,14 @@ app.get('/api/productos', async (req, res) => {
 
     res.json({
       source: 'supabase',
-      productos: data,
+      productos: garantizarIds(data),
       supabaseConnected: true,
       countInSupabase: data.length
     });
   } catch (error) {
     res.json({
       source: 'base',
-      productos: PRODUCTOS_BASE,
+      productos: garantizarIds(PRODUCTOS_BASE),
       error: error.message
     });
   }
