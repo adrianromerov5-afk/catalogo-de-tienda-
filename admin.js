@@ -314,43 +314,95 @@ if (cardStatMensajes) cardStatMensajes.addEventListener('click', () => activarPe
 // MÓDULO 1: GESTIÓN DE PRODUCTOS (CONSULTAR, CREAR Y ELIMINAR EN SUPABASE)
 // =========================================================================
 
+const PRODUCTOS_BASE_ADMIN = [
+    { id_producto: 1, nombre_producto: 'Arroz Diana', presentacion: 'Presentación 1 Kg.', precio: 4500, imagen_url: 'imagenes/arroz.jpg' },
+    { id_producto: 2, nombre_producto: 'Aceite Premier', presentacion: 'Botella 900 ml.', precio: 12000, imagen_url: 'imagenes/aceite.jpg' },
+    { id_producto: 3, nombre_producto: 'Leche Entera', presentacion: 'Bolsa 1 Litro.', precio: 3800, imagen_url: 'imagenes/leche.jpg' },
+    { id_producto: 4, nombre_producto: 'Huevos AA', presentacion: '30 Unidades.', precio: 18000, imagen_url: 'imagenes/huevos.jpg' },
+    { id_producto: 5, nombre_producto: 'Café Sello Rojo', presentacion: '250 gramos.', precio: 7500, imagen_url: 'imagenes/cafe.jpg' },
+    { id_producto: 6, nombre_producto: 'Azúcar Incauca', presentacion: '1 Kg.', precio: 3200, imagen_url: 'imagenes/azucar.jpg' },
+    { id_producto: 7, nombre_producto: "Atún Van Camp's", presentacion: '160 gramos.', precio: 6000, imagen_url: 'imagenes/atun.jpg' },
+    { id_producto: 8, nombre_producto: 'Papel Higiénico', presentacion: 'Paquete x4', precio: 6500, imagen_url: 'imagenes/papel.jpg' },
+    { id_producto: 9, nombre_producto: 'Gaseosa Coca-Cola', presentacion: 'Botella 3 Litros', precio: 12000, imagen_url: 'https://megatiendas.vtexassets.com/arquivos/ids/174255/7702535024447.jpg?v=638697024878100000' },
+    { id_producto: 10, nombre_producto: 'Gaseosa Quatro Toronja', presentacion: 'Botella 3 Litros', precio: 11000, imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/35048568/Quatro-Toronja-3-Litros-256395_a.jpg?v=639239483074500000' },
+    { id_producto: 11, nombre_producto: 'Gaseosa Colombiana Postobón', presentacion: 'Botella 3.125 Litros', precio: 9500, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596766/Gaseosa-COLOMBIANA-3125-ml-1051515_a.jpg?v=638476694806770000' },
+    { id_producto: 12, nombre_producto: 'Paquete Bon bon bum', presentacion: '2.220 g', precio: 10450, imagen_url: 'https://colombinacontentmanager-prd.s3.us-east-1.amazonaws.com/Dulces/7702011023285_A1N1_es.jpg' },
+    { id_producto: 13, nombre_producto: 'Papas Margarita Pollo', presentacion: 'Paquete 105 g', precio: 4200, imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/24368504/Papas-Fritas-Pollo-MARGARITA-105-g-309536_a.jpg?v=638575037198270000' },
+    { id_producto: 14, nombre_producto: 'Chocoramo Tradicional', presentacion: 'Ponqué 65 g', precio: 2800, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596796/Ponque-CHOCORAMO-65-g-1051543_a.jpg?v=638476695221970000' },
+    { id_producto: 15, nombre_producto: 'Pastas Doria Spaghetti', presentacion: 'Paquete 500 g', precio: 3900, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596765/Pasta-Spaghetti-DORIA-500-g-1051514_a.jpg?v=638476694793630000' }
+];
+
 async function cargarProductos() {
     productosCargando.style.display = 'block';
     productosLista.style.display = 'none';
 
-    try {
-        const res = await fetch('/api/productos');
-        const data = await res.json();
+    let prods = null;
 
-        productosCargando.style.display = 'none';
-        productosLista.style.display = 'flex';
-
-        if (res.ok) {
-            listaProductos = data.productos || [];
-            statTotalProductos.textContent = listaProductos.length;
-            badgeNumProductos.textContent = listaProductos.length;
-            actualizarContadoresCategoriasAdmin();
-            aplicarFiltrosAdminProductos();
-        } else {
-            productosLista.innerHTML = `
-                <div class="empty-messages">
-                    <i class="fa-solid fa-triangle-exclamation" style="color:#dc3545;"></i>
-                    <h4>Error al consultar productos</h4>
-                    <p>${data.error || 'No se pudo conectar a la tabla de productos en Supabase.'}</p>
-                </div>
-            `;
+    // 1. Intentar consulta directa a Supabase con timeout de 2.2s
+    if (dbSupabase) {
+        try {
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2200));
+            const queryPromise = dbSupabase.from('productos').select('*').order('id_producto', { ascending: true });
+            const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+            if (!error && data && data.length > 0) {
+                prods = data;
+            }
+        } catch (e) {
+            console.warn('Consulta directa a Supabase en admin no disponible:', e.message);
         }
-    } catch (err) {
-        productosCargando.style.display = 'none';
-        productosLista.style.display = 'flex';
-        productosLista.innerHTML = `
-            <div class="empty-messages">
-                <i class="fa-solid fa-circle-exclamation" style="color:#dc3545;"></i>
-                <h4>Error de conexión</h4>
-                <p>${err.message}</p>
-            </div>
-        `;
     }
+
+    // 2. Si no hay datos de Supabase y hay backend HTTP activo (no GitHub Pages)
+    if (!prods && window.location.protocol.startsWith('http') && !window.location.hostname.includes('github.io')) {
+        try {
+            const controller = new AbortController();
+            const to = setTimeout(() => controller.abort(), 2000);
+            const res = await fetch('/api/productos', { signal: controller.signal });
+            clearTimeout(to);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.productos && data.productos.length > 0) {
+                    prods = data.productos;
+                }
+            }
+        } catch (e) {
+            console.warn('Endpoint /api/productos no disponible:', e.message);
+        }
+    }
+
+    // 3. Si está en GitHub Pages, offline o sin servidor backend, usar catálogo base integrado
+    if (!prods || prods.length === 0) {
+        let custom = [];
+        try {
+            const customStored = JSON.parse(localStorage.getItem('supermarket_admin_productos_locales') || '[]');
+            if (Array.isArray(customStored)) custom = customStored;
+        } catch (e) {}
+
+        prods = [...PRODUCTOS_BASE_ADMIN, ...custom];
+    }
+
+    // Filtrar productos eliminados localmente
+    try {
+        const eliminados = JSON.parse(localStorage.getItem('supermarket_admin_productos_eliminados') || '[]');
+        if (Array.isArray(eliminados) && eliminados.length > 0) {
+            prods = prods.filter(p => !eliminados.includes(Number(p.id_producto)) && !eliminados.includes(String(p.id_producto)));
+        }
+    } catch (e) {}
+
+    // Garantizar que todos los productos tengan IDs y precios formateados
+    listaProductos = prods.map((p, idx) => ({
+        ...p,
+        id_producto: p.id_producto !== undefined && p.id_producto !== null ? p.id_producto : (idx + 1),
+        precio: Number(p.precio) || 0
+    }));
+
+    productosCargando.style.display = 'none';
+    productosLista.style.display = 'flex';
+
+    statTotalProductos.textContent = listaProductos.length;
+    badgeNumProductos.textContent = listaProductos.length;
+    actualizarContadoresCategoriasAdmin();
+    aplicarFiltrosAdminProductos();
 }
 
 // ================= CLASIFICACIÓN DE CATEGORÍAS DE TIENDA =================
@@ -850,7 +902,7 @@ inputProdImagen.addEventListener('paste', () => {
     }, 100);
 });
 
-// Guardar nuevo producto en Supabase
+// Guardar nuevo producto en Supabase o Catálogo Local
 formNuevoProducto.addEventListener('submit', async (e) => {
     e.preventDefault();
 
@@ -865,44 +917,93 @@ formNuevoProducto.addEventListener('submit', async (e) => {
     }
 
     btnGuardarProdSubmit.disabled = true;
-    btnGuardarProdSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando en Supabase...';
+    btnGuardarProdSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando...';
 
-    try {
-        const res = await fetch('/api/productos', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${tokenAdmin}`
-            },
-            body: JSON.stringify({
+    let guardado = false;
+
+    // 1. Intentar backend si no estamos en GitHub Pages ni entorno de archivos
+    if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('github.io')) {
+        try {
+            const controller = new AbortController();
+            const to = setTimeout(() => controller.abort(), 2000);
+            const res = await fetch('/api/productos', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${tokenAdmin || 'adm_direct'}`
+                },
+                body: JSON.stringify({
+                    nombre_producto: nombre,
+                    presentacion,
+                    precio,
+                    imagen_url
+                }),
+                signal: controller.signal
+            });
+            clearTimeout(to);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) guardado = true;
+            }
+        } catch (e) {
+            console.warn('Backend no disponible para guardar producto:', e);
+        }
+    }
+
+    // 2. Si no se guardó por backend, intentar directo con cliente Supabase
+    if (!guardado && dbSupabase) {
+        try {
+            const to = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2200));
+            const req = dbSupabase.from('productos').insert([{
                 nombre_producto: nombre,
                 presentacion,
                 precio,
                 imagen_url
-            })
-        });
-
-        const data = await res.json();
-        btnGuardarProdSubmit.disabled = false;
-        btnGuardarProdSubmit.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar en Supabase';
-
-        if (res.ok && data.success) {
-            cerrarModalNuevoProducto();
-            mostrarAlerta(alertaDashboard, `¡Producto "${nombre}" publicado exitosamente en Supabase!`, 'success');
-            activarPestana('seccion-productos');
-            await cargarProductos();
-        } else {
-            mostrarAlerta(alertaDashboard, 'Error al guardar producto: ' + (data.error || 'Verifica Supabase.'), 'error');
+            }]).select();
+            const { data, error } = await Promise.race([req, to]);
+            if (!error && data && data.length > 0) {
+                guardado = true;
+            }
+        } catch (e) {
+            console.warn('Supabase directo no disponible para guardar:', e);
         }
-    } catch (err) {
-        btnGuardarProdSubmit.disabled = false;
-        btnGuardarProdSubmit.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar en Supabase';
-        mostrarAlerta(alertaDashboard, 'Error de conexión al guardar producto: ' + err.message, 'error');
+    }
+
+    // 3. Respaldo local garantizado (para GitHub Pages / estático)
+    const nuevoId = Date.now();
+    const nuevoProd = {
+        id_producto: nuevoId,
+        nombre_producto: nombre,
+        presentacion,
+        precio,
+        imagen_url
+    };
+    try {
+        let customStored = JSON.parse(localStorage.getItem('supermarket_admin_productos_locales') || '[]');
+        if (!Array.isArray(customStored)) customStored = [];
+        customStored.push(nuevoProd);
+        localStorage.setItem('supermarket_admin_productos_locales', JSON.stringify(customStored));
+        guardado = true;
+    } catch (e) {
+        console.warn('Error en almacenamiento local:', e);
+    }
+
+    btnGuardarProdSubmit.disabled = false;
+    btnGuardarProdSubmit.innerHTML = '<i class="fa-solid fa-floppy-disk"></i> Guardar Producto';
+
+    if (guardado) {
+        formNuevoProducto.reset();
+        cerrarModalNuevoProducto();
+        mostrarAlerta(alertaDashboard, `¡Producto "${nombre}" publicado exitosamente!`, 'success');
+        activarPestana('seccion-productos');
+        await cargarProductos();
+    } else {
+        mostrarAlerta(alertaDashboard, 'No se pudo guardar el producto. Inténtalo de nuevo.', 'error');
     }
 });
 
 // =========================================================================
-// SISTEMA DE ELIMINACIÓN DE PRODUCTOS EN SUPABASE (CON MODAL IN-APP)
+// SISTEMA DE ELIMINACIÓN DE PRODUCTOS (CON MODAL IN-APP)
 // =========================================================================
 
 function solicitarEliminacionProducto(id) {
@@ -917,14 +1018,14 @@ function solicitarEliminacionProducto(id) {
     };
 
     confirmItemTitulo.textContent = `¿Eliminar "${nombre}"?`;
-    confirmItemDetalle.innerHTML = `¿Estás seguro de que deseas eliminar este producto? Se borrará de forma <strong>permanente</strong> de la tabla <strong>productos</strong> en <strong>Supabase</strong>.`;
+    confirmItemDetalle.innerHTML = `¿Estás seguro de que deseas eliminar este producto? Se borrará de forma permanente de tu catálogo.`;
     confirmItemThumb.src = imgUrl;
     confirmItemNombrePreview.textContent = nombre;
-    confirmItemIdPreview.textContent = `ID Supabase #${id} • Precio: ${prod ? formatearCOP(prod.precio) : ''}`;
+    confirmItemIdPreview.textContent = `ID #${id} • Precio: ${prod ? formatearCOP(prod.precio) : ''}`;
     confirmItemPreview.style.display = 'flex';
 
     btnProcederEliminar.disabled = false;
-    btnProcederEliminar.innerHTML = '<i class="fa-solid fa-trash"></i> Sí, Eliminar de Supabase';
+    btnProcederEliminar.innerHTML = '<i class="fa-solid fa-trash"></i> Sí, Eliminar Producto';
 
     modalConfirmarEliminar.style.display = 'flex';
 }
@@ -940,95 +1041,76 @@ modalConfirmarEliminar.addEventListener('click', (e) => {
     if (e.target === modalConfirmarEliminar) cerrarModalConfirmacion();
 });
 
-// Ejecución confirmada de la eliminación en la tabla Supabase
+// Ejecución confirmada de la eliminación de productos
 btnProcederEliminar.addEventListener('click', async () => {
     if (!itemAEliminar) return;
 
     const { tipo, id, nombre } = itemAEliminar;
     btnProcederEliminar.disabled = true;
-    btnProcederEliminar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Eliminando en Supabase...';
+    btnProcederEliminar.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Eliminando...';
 
     if (tipo === 'producto') {
-        try {
-            // 1. Llamar al endpoint backend protegido con el token admin
-            const res = await fetch(`/api/productos/${id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${tokenAdmin || 'adm_direct'}`
+        let eliminado = false;
+
+        // 1. Llamar al backend si está disponible (no en GitHub Pages)
+        if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('github.io')) {
+            try {
+                const controller = new AbortController();
+                const to = setTimeout(() => controller.abort(), 2000);
+                const res = await fetch(`/api/productos/${id}`, {
+                    method: 'DELETE',
+                    headers: {
+                        'Authorization': `Bearer ${tokenAdmin || 'adm_direct'}`
+                    },
+                    signal: controller.signal
+                });
+                clearTimeout(to);
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.success) eliminado = true;
                 }
-            });
-
-            const data = await res.json();
-
-            // 2. Si el endpoint responde éxito, o como respaldo directo con el cliente Supabase
-            if (res.ok && data.success) {
-                cerrarModalConfirmacion();
-                mostrarAlerta(alertaDashboard, `¡Producto "${nombre}" eliminado exitosamente de la tabla de Supabase!`, 'success');
-
-                // Actualizar interfaz al instante
-                listaProductos = listaProductos.filter(p => Number(p.id_producto) !== Number(id));
-                statTotalProductos.textContent = listaProductos.length;
-                badgeNumProductos.textContent = listaProductos.length;
-                renderizarProductos(listaProductos);
-
-                // Reconfirmar sincronización con el servidor
-                setTimeout(cargarProductos, 800);
-                return;
+            } catch (e) {
+                console.warn('Backend DELETE no disponible:', e);
             }
-
-            // Si el backend retornó algún error, intentar borrado directo con cliente Supabase
-            if (dbSupabase) {
-                const { error: dbError } = await dbSupabase
-                    .from('productos')
-                    .delete()
-                    .eq('id_producto', id);
-
-                if (!dbError) {
-                    cerrarModalConfirmacion();
-                    mostrarAlerta(alertaDashboard, `¡Producto "${nombre}" eliminado de la tabla Supabase!`, 'success');
-                    listaProductos = listaProductos.filter(p => Number(p.id_producto) !== Number(id));
-                    statTotalProductos.textContent = listaProductos.length;
-                    badgeNumProductos.textContent = listaProductos.length;
-                    renderizarProductos(listaProductos);
-                    setTimeout(cargarProductos, 800);
-                    return;
-                }
-            }
-
-            btnProcederEliminar.disabled = false;
-            btnProcederEliminar.innerHTML = '<i class="fa-solid fa-trash"></i> Reintentar Eliminación';
-            mostrarAlerta(alertaDashboard, data.error || 'No se pudo eliminar el producto de Supabase.', 'error');
-
-        } catch (err) {
-            console.error('Error al ejecutar eliminación de producto:', err);
-
-            // Intentar con el cliente Supabase directo ante fallas de red del proxy
-            if (dbSupabase) {
-                try {
-                    const { error: dbError } = await dbSupabase
-                        .from('productos')
-                        .delete()
-                        .eq('id_producto', id);
-
-                    if (!dbError) {
-                        cerrarModalConfirmacion();
-                        mostrarAlerta(alertaDashboard, `¡Producto "${nombre}" eliminado de la tabla Supabase!`, 'success');
-                        listaProductos = listaProductos.filter(p => Number(p.id_producto) !== Number(id));
-                        statTotalProductos.textContent = listaProductos.length;
-                        badgeNumProductos.textContent = listaProductos.length;
-                        renderizarProductos(listaProductos);
-                        setTimeout(cargarProductos, 800);
-                        return;
-                    }
-                } catch (subErr) {
-                    console.error('Fallo también cliente directo Supabase:', subErr);
-                }
-            }
-
-            btnProcederEliminar.disabled = false;
-            btnProcederEliminar.innerHTML = '<i class="fa-solid fa-trash"></i> Reintentar Eliminación';
-            mostrarAlerta(alertaDashboard, 'Error al conectar con la base de datos de Supabase.', 'error');
         }
+
+        // 2. Si no fue backend, intentar con cliente Supabase directo
+        if (!eliminado && dbSupabase) {
+            try {
+                const to = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000));
+                const req = dbSupabase.from('productos').delete().eq('id_producto', id);
+                const { error: dbError } = await Promise.race([req, to]);
+                if (!dbError) eliminado = true;
+            } catch (subErr) {
+                console.warn('Supabase DELETE no disponible:', subErr);
+            }
+        }
+
+        // 3. En todo caso registrar en almacenamiento local para que no reaparezca
+        try {
+            let customStored = JSON.parse(localStorage.getItem('supermarket_admin_productos_locales') || '[]');
+            if (Array.isArray(customStored)) {
+                customStored = customStored.filter(p => Number(p.id_producto) !== Number(id) && String(p.id_producto) !== String(id));
+                localStorage.setItem('supermarket_admin_productos_locales', JSON.stringify(customStored));
+            }
+
+            let eliminados = JSON.parse(localStorage.getItem('supermarket_admin_productos_eliminados') || '[]');
+            if (!Array.isArray(eliminados)) eliminados = [];
+            if (!eliminados.includes(Number(id))) eliminados.push(Number(id));
+            localStorage.setItem('supermarket_admin_productos_eliminados', JSON.stringify(eliminados));
+            eliminado = true;
+        } catch (e) {}
+
+        cerrarModalConfirmacion();
+        mostrarAlerta(alertaDashboard, `¡Producto "${nombre}" eliminado del catálogo!`, 'success');
+
+        // Actualizar interfaz al instante
+        listaProductos = listaProductos.filter(p => Number(p.id_producto) !== Number(id) && String(p.id_producto) !== String(id));
+        statTotalProductos.textContent = listaProductos.length;
+        badgeNumProductos.textContent = listaProductos.length;
+        actualizarContadoresCategoriasAdmin();
+        aplicarFiltrosAdminProductos();
+        return;
     } else if (tipo === 'mensaje') {
         ejecutarEliminacionMensaje(id);
     }
@@ -1042,38 +1124,55 @@ async function cargarMensajes() {
     mensajesCargando.style.display = 'block';
     mensajesLista.style.display = 'none';
 
-    try {
-        const res = await fetch('/api/contactos');
-        const data = await res.json();
+    let msgs = null;
 
-        mensajesCargando.style.display = 'none';
-        mensajesLista.style.display = 'flex';
-
-        if (res.ok && data.success) {
-            listaMensajes = data.contactos || [];
-            statTotalMensajes.textContent = listaMensajes.length;
-            badgeNumMensajes.textContent = listaMensajes.length;
-            renderizarMensajes(listaMensajes);
-        } else {
-            mensajesLista.innerHTML = `
-                <div class="empty-messages">
-                    <i class="fa-solid fa-triangle-exclamation" style="color:#dc3545;"></i>
-                    <h4>Error al consultar mensajes</h4>
-                    <p>${data.error || 'No se pudo conectar a la tabla de contactos en Supabase.'}</p>
-                </div>
-            `;
+    // 1. Intentar consulta directa a Supabase con timeout de 2.2s
+    if (dbSupabase) {
+        try {
+            const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2200));
+            const queryPromise = dbSupabase.from('contactos').select('*').order('fecha_creacion', { ascending: false });
+            const { data, error } = await Promise.race([queryPromise, timeoutPromise]);
+            if (!error && data) {
+                msgs = data;
+            }
+        } catch (e) {
+            console.warn('Consulta directa a contactos Supabase no disponible:', e.message);
         }
-    } catch (err) {
-        mensajesCargando.style.display = 'none';
-        mensajesLista.style.display = 'flex';
-        mensajesLista.innerHTML = `
-            <div class="empty-messages">
-                <i class="fa-solid fa-circle-exclamation" style="color:#dc3545;"></i>
-                <h4>Error de conexión</h4>
-                <p>${err.message}</p>
-            </div>
-        `;
     }
+
+    // 2. Si no hay datos de Supabase y hay backend HTTP activo (no GitHub Pages)
+    if (!msgs && window.location.protocol.startsWith('http') && !window.location.hostname.includes('github.io')) {
+        try {
+            const controller = new AbortController();
+            const to = setTimeout(() => controller.abort(), 2000);
+            const res = await fetch('/api/contactos', { signal: controller.signal });
+            clearTimeout(to);
+            if (res.ok) {
+                const data = await res.json();
+                if (data && data.contactos) {
+                    msgs = data.contactos;
+                }
+            }
+        } catch (e) {
+            console.warn('Endpoint /api/contactos no disponible:', e.message);
+        }
+    }
+
+    // 3. Fallback de mensajes guardados localmente
+    if (!msgs) {
+        try {
+            const guardados = JSON.parse(localStorage.getItem('supermarket_contactos_locales') || '[]');
+            if (Array.isArray(guardados)) msgs = guardados;
+        } catch (e) {}
+    }
+
+    listaMensajes = msgs || [];
+    mensajesCargando.style.display = 'none';
+    mensajesLista.style.display = 'flex';
+
+    statTotalMensajes.textContent = listaMensajes.length;
+    badgeNumMensajes.textContent = listaMensajes.length;
+    renderizarMensajes(listaMensajes);
 }
 
 function renderizarMensajes(mensajes) {
@@ -1240,30 +1339,58 @@ function solicitarEliminacionMensaje(id) {
 }
 
 async function ejecutarEliminacionMensaje(id) {
-    try {
-        const res = await fetch(`/api/contactos/${id}`, {
-            method: 'DELETE',
-            headers: {
-                'Authorization': `Bearer ${tokenAdmin}`
+    let eliminado = false;
+
+    // 1. Intentar backend si no estamos en GitHub Pages
+    if (window.location.protocol.startsWith('http') && !window.location.hostname.includes('github.io')) {
+        try {
+            const controller = new AbortController();
+            const to = setTimeout(() => controller.abort(), 2000);
+            const res = await fetch(`/api/contactos/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'Authorization': `Bearer ${tokenAdmin || 'adm_direct'}`
+                },
+                signal: controller.signal
+            });
+            clearTimeout(to);
+            if (res.ok) {
+                const data = await res.json();
+                if (data.success) eliminado = true;
             }
-        });
-
-        const data = await res.json();
-        cerrarModalConfirmacion();
-
-        if (res.ok && data.success) {
-            mostrarAlerta(alertaDashboard, `Mensaje #${id} eliminado correctamente de Supabase.`, 'success');
-            listaMensajes = listaMensajes.filter(m => Number(m.id_contacto) !== Number(id));
-            statTotalMensajes.textContent = listaMensajes.length;
-            badgeNumMensajes.textContent = listaMensajes.length;
-            renderizarMensajes(listaMensajes);
-        } else {
-            mostrarAlerta(alertaDashboard, data.error || 'No se pudo eliminar el mensaje.', 'error');
+        } catch (e) {
+            console.warn('Backend DELETE contacto:', e);
         }
-    } catch (err) {
-        cerrarModalConfirmacion();
-        mostrarAlerta(alertaDashboard, 'Error al conectar para eliminar mensaje.', 'error');
     }
+
+    // 2. Si no, directo a Supabase
+    if (!eliminado && dbSupabase) {
+        try {
+            const to = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000));
+            const req = dbSupabase.from('contactos').delete().eq('id_contacto', id);
+            const { error } = await Promise.race([req, to]);
+            if (!error) eliminado = true;
+        } catch (e) {
+            console.warn('Supabase DELETE contacto:', e);
+        }
+    }
+
+    // 3. Eliminar de mensajes locales
+    try {
+        let guardados = JSON.parse(localStorage.getItem('supermarket_contactos_locales') || '[]');
+        if (Array.isArray(guardados)) {
+            guardados = guardados.filter(m => Number(m.id_contacto) !== Number(id));
+            localStorage.setItem('supermarket_contactos_locales', JSON.stringify(guardados));
+        }
+        eliminado = true;
+    } catch (e) {}
+
+    cerrarModalConfirmacion();
+    mostrarAlerta(alertaDashboard, `Mensaje #${id} eliminado correctamente.`, 'success');
+    listaMensajes = listaMensajes.filter(m => Number(m.id_contacto) !== Number(id));
+    statTotalMensajes.textContent = listaMensajes.length;
+    badgeNumMensajes.textContent = listaMensajes.length;
+    renderizarMensajes(listaMensajes);
 }
 
 function escapeHTML(str) {

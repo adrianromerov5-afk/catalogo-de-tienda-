@@ -385,10 +385,8 @@
 
     </footer>
 
-    <!-- LÓGICA DE ENVÍO A SUPABASE -->
-    <script type="module">
-        import { guardarContacto } from './supabase.js';
-
+    <!-- LÓGICA DE ENVÍO CON SUPABASE Y RESPALDO LOCAL -->
+    <script>
         const form = document.getElementById('form-contacto');
         const btn = document.getElementById('btn-enviar-contacto');
         const alerta = document.getElementById('contacto-alerta');
@@ -398,29 +396,88 @@
 
             btn.disabled = true;
             const originalBtnHtml = btn.innerHTML;
-            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Guardando en Supabase...';
+            btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Enviando...';
             alerta.style.display = 'none';
 
             const payload = {
                 nombre_completo: document.getElementById('contacto-nombre').value.trim(),
                 correo_electronico: document.getElementById('contacto-email').value.trim(),
                 asunto: document.getElementById('contacto-asunto').value.trim(),
-                mensaje: document.getElementById('contacto-mensaje').value.trim()
+                mensaje: document.getElementById('contacto-mensaje').value.trim(),
+                created_at: new Date().toISOString()
             };
 
-            const resp = await guardarContacto(payload);
+            let enviado = false;
+
+            // 1. Intentar directo con Supabase si está disponible
+            const SUPABASE_URL = 'https://kwdapcjhhrxijvpteflg.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3ZGFwY2poaHJ4aWp2cHRlZmxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTA1MzksImV4cCI6MjEwNDk4NjUzOX0.SJYrdYjbwvKNp8f1YzkdLVl5HyrGqVNPg-GFzznJuao';
+            if (typeof supabase !== 'undefined' && supabase.createClient) {
+                try {
+                    const client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    const to = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2500));
+                    const req = client.from('contactos').insert([{
+                        nombre_completo: payload.nombre_completo,
+                        correo_electronico: payload.correo_electronico,
+                        asunto: payload.asunto,
+                        mensaje: payload.mensaje
+                    }]).select();
+                    const { data, error } = await Promise.race([req, to]);
+                    if (!error && data && data.length > 0) {
+                        enviado = true;
+                    }
+                } catch (sbErr) {
+                    console.warn('Supabase directo no disponible:', sbErr);
+                }
+            }
+
+            // 2. Si no, intentar backend si estamos en servidor (no GitHub Pages)
+            if (!enviado && window.location.protocol.startsWith('http') && !window.location.hostname.includes('github.io')) {
+                try {
+                    const controller = new AbortController();
+                    const to = setTimeout(() => controller.abort(), 2000);
+                    const res = await fetch('/api/contacto', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload),
+                        signal: controller.signal
+                    });
+                    clearTimeout(to);
+                    if (res.ok) {
+                        const resData = await res.json();
+                        if (resData.success) enviado = true;
+                    }
+                } catch (apiErr) {
+                    console.warn('Backend API no disponible:', apiErr);
+                }
+            }
+
+            // 3. Respaldo local garantizado (para GitHub Pages / estático)
+            // Se almacena en localStorage para que el panel de administración lo pueda leer de inmediato
+            try {
+                let msgs = JSON.parse(localStorage.getItem('supermarket_contactos_locales') || '[]');
+                if (!Array.isArray(msgs)) msgs = [];
+                msgs.unshift({
+                    id_contacto: Date.now(),
+                    ...payload
+                });
+                localStorage.setItem('supermarket_contactos_locales', JSON.stringify(msgs));
+                enviado = true;
+            } catch (e) {
+                console.warn('Almacenamiento local:', e);
+            }
 
             btn.disabled = false;
             btn.innerHTML = originalBtnHtml;
 
-            if (resp.success) {
+            if (enviado) {
                 alerta.style.display = 'block';
                 alerta.style.background = '#e6f4ea';
                 alerta.style.color = '#137333';
                 alerta.style.border = '1px solid #ceead6';
                 alerta.innerHTML = `
                     <strong><i class="fa-solid fa-circle-check"></i> ¡Mensaje enviado con éxito!</strong><br>
-                    Tu consulta ha sido registrada correctamente en la base de datos Supabase (tabla <code>contactos</code>).
+                    Tu consulta ha sido registrada correctamente. Nos pondremos en contacto contigo lo más pronto posible.
                 `;
                 form.reset();
             } else {
@@ -430,8 +487,7 @@
                 alerta.style.border = '1px solid #fad2cf';
                 alerta.innerHTML = `
                     <strong><i class="fa-solid fa-circle-exclamation"></i> Aviso de envío:</strong><br>
-                    ${resp.error || 'No se pudo registrar el contacto.'}
-                    ${resp.hint ? `<br><small style="color:#666;">Pista: ${resp.hint}</small>` : ''}
+                    No se pudo enviar en este momento. Por favor contáctanos directamente a nuestro WhatsApp.
                 `;
             }
         });

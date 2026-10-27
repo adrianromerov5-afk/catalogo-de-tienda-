@@ -82,24 +82,45 @@
         © 2026 Catálogo Digital - Proyecto SENA | Conectado a Supabase
     </footer>
 
-    <!-- Cargar dinámicamente desde Supabase -->
-    <script type="module">
-        import { obtenerProductos } from './supabase.js';
-
+    <!-- Cargar dinámicamente desde Supabase o catálogo local -->
+    <script>
         async function cargarDestacados() {
             try {
-                const res = await obtenerProductos();
-                if (res.productos && res.productos.length > 0) {
+                const SUPABASE_URL = 'https://kwdapcjhhrxijvpteflg.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3ZGFwY2poaHJ4aWp2cHRlZmxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTA1MzksImV4cCI6MjEwNDk4NjUzOX0.SJYrdYjbwvKNp8f1YzkdLVl5HyrGqVNPg-GFzznJuao';
+                let client = null;
+                if (typeof supabase !== 'undefined' && supabase.createClient) {
+                    client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                }
+
+                let prods = null;
+                if (client) {
+                    const to = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), 2000));
+                    const req = client.from('productos').select('*').limit(4);
+                    const { data, error } = await Promise.race([req, to]);
+                    if (!error && data && data.length > 0) prods = data;
+                }
+
+                if (!prods && window.location.protocol.startsWith('http') && !window.location.hostname.includes('github.io')) {
+                    const res = await fetch('/api/productos');
+                    if (res.ok) {
+                        const d = await res.json();
+                        if (d && d.productos) prods = d.productos.slice(0, 4);
+                    }
+                }
+
+                if (prods && prods.length > 0) {
                     const contenedor = document.getElementById('productos-destacados');
-                    const destacados = res.productos.slice(0, 4);
-                    contenedor.innerHTML = destacados.map(p => `
-                        <div class="card">
-                            <img src="${p.imagen_url || 'imagenes/arroz.jpg'}" alt="${p.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
-                            <h3>${p.nombre_producto}</h3>
-                            <p>${p.presentacion || ''}</p>
-                            <div class="precio">$${(Number(p.precio) || 0).toLocaleString('es-CO')}</div>
-                        </div>
-                    `).join('');
+                    if (contenedor) {
+                        contenedor.innerHTML = prods.map(p => `
+                            <div class="card">
+                                <img src="${p.imagen_url || 'imagenes/arroz.jpg'}" alt="${p.nombre_producto}" onerror="this.src='imagenes/arroz.jpg'">
+                                <h3>${p.nombre_producto}</h3>
+                                <p>${p.presentacion || ''}</p>
+                                <div class="precio">$${(Number(p.precio) || 0).toLocaleString('es-CO')}</div>
+                            </div>
+                        `).join('');
+                    }
                 }
             } catch (e) {
                 console.log('Usando destacados por defecto');

@@ -211,7 +211,19 @@
             { id_producto: '15', nombre_producto: 'Pastas Doria Spaghetti', presentacion: 'Paquete 500 g', precio: 3900, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596765/Pasta-Spaghetti-DORIA-500-g-1051514_a.jpg?v=638476694793630000' }
         ];
 
-        let listaProductos = [...PRODUCTOS_BASE_CATALOGO];
+        let localAgregados = [];
+        try {
+            const rawAgregados = JSON.parse(localStorage.getItem('supermarket_admin_productos_locales') || '[]');
+            if (Array.isArray(rawAgregados)) localAgregados = rawAgregados;
+        } catch(e) {}
+
+        let listaProductos = [...PRODUCTOS_BASE_CATALOGO, ...localAgregados];
+        try {
+            const eliminados = JSON.parse(localStorage.getItem('supermarket_admin_productos_eliminados') || '[]');
+            if (Array.isArray(eliminados) && eliminados.length > 0) {
+                listaProductos = listaProductos.filter(p => !eliminados.includes(Number(p.id_producto)) && !eliminados.includes(String(p.id_producto)));
+            }
+        } catch(e) {}
         let categoriaSeleccionada = 'todas';
 
         // Carga segura y sanitizada del carrito desde localStorage
