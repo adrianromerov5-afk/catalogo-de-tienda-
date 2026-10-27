@@ -30,12 +30,12 @@
             <form id="form-admin-login">
                 <div class="form-field">
                     <label for="admin-user"><i class="fa-solid fa-user"></i> Usuario Administrador</label>
-                    <input type="text" id="admin-user" placeholder="Ej. admin" required autocomplete="username">
+                    <input type="text" id="admin-user" placeholder="Ej. admin" required autocomplete="username" autocapitalize="none" autocorrect="off" spellcheck="false">
                 </div>
 
                 <div class="form-field">
                     <label for="admin-pass"><i class="fa-solid fa-lock"></i> Contraseña</label>
-                    <input type="password" id="admin-pass" placeholder="••••••••" required autocomplete="current-password">
+                    <input type="password" id="admin-pass" placeholder="••••••••" required autocomplete="current-password" autocapitalize="none" autocorrect="off">
                 </div>
 
                 <div class="alert-box" id="login-alerta" style="display:none;"></div>
@@ -377,8 +377,8 @@
         </div>
     </div>
 
-    <!-- Script de lógica del módulo administrador -->
-    <script type="module" src="admin.js"></script>
+    <!-- Script de lógica del módulo administrador (compatible con GitHub Pages y local) -->
+    <script src="admin.js"></script>
 
 </body>
 </html>

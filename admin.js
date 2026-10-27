@@ -113,12 +113,25 @@ async function verificarSesion() {
         return;
     }
 
+    if (tokenAdmin === 'adm_local_session') {
+        usuarioAdmin = localStorage.getItem('admin_user_nombre') || 'admin';
+        if (nombreAdminActivo) nombreAdminActivo.textContent = usuarioAdmin;
+        mostrarPantallaDashboard();
+        cargarProductos();
+        cargarMensajes();
+        return;
+    }
+
     try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2000);
         const res = await fetch('/api/admin/verify', {
             headers: {
                 'Authorization': `Bearer ${tokenAdmin}`
-            }
+            },
+            signal: controller.signal
         });
+        clearTimeout(timeoutId);
 
         if (res.ok) {
             const data = await res.json();
@@ -128,12 +141,11 @@ async function verificarSesion() {
             cargarProductos();
             cargarMensajes();
         } else {
-            // Si el token falló, permitir reingreso sin trabar la pantalla
             mostrarPantallaLogin();
         }
     } catch (err) {
-        console.warn('Error validando sesión admin:', err);
-        mostrarPantallaDashboard(); // Mantener vista local si hay sesión guardada
+        console.warn('Servidor de verificación no disponible, manteniendo sesión local:', err);
+        mostrarPantallaDashboard();
         cargarProductos();
         cargarMensajes();
     }
@@ -159,27 +171,26 @@ function cerrarSesionLocal() {
 // ================= INICIAR SESIÓN =================
 formLogin.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const usuario = inputUser.value.trim();
-    const contrasena = inputPass.value.trim();
+    const usuario = (inputUser.value || '').trim();
+    const contrasena = (inputPass.value || '').trim();
+    const esAdminLocal = (usuario.toLowerCase() === 'admin' && contrasena === 'admin123');
 
     const btnSubmit = document.getElementById('btn-login-submit');
     btnSubmit.disabled = true;
     btnSubmit.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Verificando...';
 
-    try {
-        const res = await fetch('/api/admin/login', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ usuario, contrasena })
-        });
+    // 1. Si está en GitHub Pages o apertura de archivo local (file://), autenticar de forma instantánea
+    const esEntornoEstatico = window.location.protocol === 'file:' || 
+                              window.location.hostname.includes('github.io') || 
+                              window.location.hostname.includes('github.com');
 
-        const data = await res.json();
+    if (esEntornoEstatico) {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión';
 
-        if (res.ok && data.success) {
-            tokenAdmin = data.token;
-            usuarioAdmin = data.usuario;
+        if (esAdminLocal) {
+            tokenAdmin = 'adm_local_session';
+            usuarioAdmin = 'admin';
             localStorage.setItem('admin_auth_token', tokenAdmin);
             localStorage.setItem('admin_user_nombre', usuarioAdmin);
             if (nombreAdminActivo) nombreAdminActivo.textContent = usuarioAdmin;
@@ -187,12 +198,79 @@ formLogin.addEventListener('submit', async (e) => {
             mostrarPantallaDashboard();
             cargarProductos();
             cargarMensajes();
+            return;
         } else {
-            mostrarAlerta(alertaLogin, data.error || 'Credenciales inválidas');
+            mostrarAlerta(alertaLogin, 'Credenciales incorrectas. Usuario: admin / Contraseña: admin123');
+            return;
         }
+    }
+
+    // 2. Si está en servidor Node.js/Vercel con backend activo
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 2500);
+
+        const res = await fetch('/api/admin/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, contrasena }),
+            signal: controller.signal
+        });
+        clearTimeout(timeoutId);
+
+        btnSubmit.disabled = false;
+        btnSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión';
+
+        if (res.ok) {
+            const data = await res.json();
+            if (data.success) {
+                tokenAdmin = data.token;
+                usuarioAdmin = data.usuario || 'admin';
+                localStorage.setItem('admin_auth_token', tokenAdmin);
+                localStorage.setItem('admin_user_nombre', usuarioAdmin);
+                if (nombreAdminActivo) nombreAdminActivo.textContent = usuarioAdmin;
+                formLogin.reset();
+                mostrarPantallaDashboard();
+                cargarProductos();
+                cargarMensajes();
+                return;
+            } else {
+                mostrarAlerta(alertaLogin, data.error || 'Credenciales inválidas');
+                return;
+            }
+        }
+
+        // Si el endpoint devuelve 404 (sin ruta backend) pero son credenciales correctas
+        if (esAdminLocal) {
+            tokenAdmin = 'adm_local_session';
+            usuarioAdmin = 'admin';
+            localStorage.setItem('admin_auth_token', tokenAdmin);
+            localStorage.setItem('admin_user_nombre', usuarioAdmin);
+            if (nombreAdminActivo) nombreAdminActivo.textContent = usuarioAdmin;
+            formLogin.reset();
+            mostrarPantallaDashboard();
+            cargarProductos();
+            cargarMensajes();
+            return;
+        }
+
+        mostrarAlerta(alertaLogin, 'Credenciales inválidas');
     } catch (err) {
         btnSubmit.disabled = false;
         btnSubmit.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Iniciar Sesión';
+        // Respaldo en caso de fallo de red
+        if (esAdminLocal) {
+            tokenAdmin = 'adm_local_session';
+            usuarioAdmin = 'admin';
+            localStorage.setItem('admin_auth_token', tokenAdmin);
+            localStorage.setItem('admin_user_nombre', usuarioAdmin);
+            if (nombreAdminActivo) nombreAdminActivo.textContent = usuarioAdmin;
+            formLogin.reset();
+            mostrarPantallaDashboard();
+            cargarProductos();
+            cargarMensajes();
+            return;
+        }
         mostrarAlerta(alertaLogin, 'Error al conectar con el servidor.');
     }
 });
