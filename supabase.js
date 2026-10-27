@@ -125,25 +125,46 @@ const sanitizarLista = (lista) => (lista || []).map((p, idx) => ({
     precio: Number(p.precio) || 0
 }));
 
+// Helper para evitar que las consultas de red se queden congeladas indefinidamente en GitHub Pages o modo offline
+const withTimeout = (promise, ms = 2200) => {
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout de red superado')), ms))
+    ]);
+};
+
 /**
  * Obtiene los productos desde la tabla 'productos' en Supabase.
- * Si la tabla aún no tiene registros o hay un fallo, se consulta la API de respaldo.
+ * En entornos estáticos como GitHub Pages o modo offline, recurre de inmediato
+ * al catálogo local sin bloquear la pantalla con pantallas de carga infinitas.
  */
 export async function obtenerProductos() {
-    try {
-        if (client) {
-            const { data, error } = await client
+    // 1. Intentar Supabase si el cliente está inicializado, con timeout rápido (2.2s)
+    if (client) {
+        try {
+            const queryPromise = client
                 .from('productos')
                 .select('*')
                 .order('id_producto', { ascending: true });
 
+            const { data, error } = await withTimeout(queryPromise, 2200);
+
             if (!error && data && data.length > 0) {
                 return { source: 'supabase', productos: sanitizarLista(data), error: null };
             }
+        } catch (sbErr) {
+            console.warn('Supabase no disponible o timeout (entorno GitHub/offline):', sbErr.message);
         }
+    }
 
-        // Si no hay datos en cliente o cliente no disponible, consultar endpoint local
-        const response = await fetch('/api/productos');
+    // 2. Si hay servidor local/Vercel (Express), consultar endpoint /api/productos
+    // En GitHub Pages este endpoint no existe (404), por lo que se utiliza un timeout corto (1.2s)
+    try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1200);
+        const response = await fetch('/api/productos', { signal: controller.signal });
+        clearTimeout(timeoutId);
+
         if (response.ok) {
             const resData = await response.json();
             return {
@@ -152,10 +173,12 @@ export async function obtenerProductos() {
                 error: null
             };
         }
-    } catch (err) {
-        console.warn('Fallo al obtener de Supabase, usando catálogo local:', err);
+    } catch (apiErr) {
+        // Normal en GitHub Pages o apertura directa de archivos HTML
+        console.warn('Servidor API local no presente (modo estático):', apiErr.message);
     }
 
+    // 3. Catálogo local instantáneo (Garantizado para GitHub Pages, local o sin backend)
     return { source: 'local', productos: sanitizarLista(PRODUCTOS_INICIALES), error: null };
 }
 
