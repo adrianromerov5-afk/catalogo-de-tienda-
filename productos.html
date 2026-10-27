@@ -29,7 +29,7 @@
 
         <!-- Buscador en tiempo real -->
         <div class="buscador">
-            <input type="text" id="input-busqueda" placeholder="Buscar producto en la base de datos...">
+            <input type="text" id="input-busqueda" placeholder="Buscar producto...">
             <button id="btn-buscar" title="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
 
@@ -59,7 +59,7 @@
     <!-- Título -->
     <section class="titulo">
         <h1>Explorar Catálogo</h1>
-        <p>Inicio > Catálogo digital conectado a Supabase (Tabla: productos)</p>
+        <p>Inicio > Catálogo digital de productos</p>
     </section>
 
     <main>
@@ -134,7 +134,7 @@
             <!-- Spinner de carga inicial -->
             <div class="spinner-container" id="spinner-carga">
                 <div class="spinner"></div>
-                <p>Cargando catálogo desde la base de datos Supabase...</p>
+                <p>Cargando...</p>
             </div>
         </section>
 
@@ -857,7 +857,7 @@
                 renderizarProductos(listaProductos);
             } catch (err) {
                 console.error('Error al cargar productos:', err);
-                mostrarToast('Error al conectar con la base de datos', true);
+                mostrarToast('Error al cargar los productos', true);
             } finally {
                 if (spinner) spinner.style.display = 'none';
             }
