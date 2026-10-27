@@ -190,11 +190,28 @@
         <p>© 2026 Catálogo Digital - Proyecto SENA | Conectado a Supabase PostgreSQL</p>
     </footer>
 
-    <!-- LÓGICA DE INTEGRACIÓN CON SUPABASE -->
-    <script type="module">
-        import { db, obtenerProductos, agregarProducto, sincronizarCatalogo } from './supabase.js';
+    <!-- LÓGICA DE INTEGRACIÓN CON SUPABASE Y CATÁLOGO -->
+    <script>
+        // Catálogo base de referencia (garantiza funcionamiento en GitHub Pages, local y offline)
+        const PRODUCTOS_BASE_CATALOGO = [
+            { id_producto: '1', nombre_producto: 'Arroz Diana', presentacion: 'Presentación 1 Kg.', precio: 4500, imagen_url: 'imagenes/arroz.jpg' },
+            { id_producto: '2', nombre_producto: 'Aceite Premier', presentacion: 'Botella 900 ml.', precio: 12000, imagen_url: 'imagenes/aceite.jpg' },
+            { id_producto: '3', nombre_producto: 'Leche Entera', presentacion: 'Bolsa 1 Litro.', precio: 3800, imagen_url: 'imagenes/leche.jpg' },
+            { id_producto: '4', nombre_producto: 'Huevos AA', presentacion: '30 Unidades.', precio: 18000, imagen_url: 'imagenes/huevos.jpg' },
+            { id_producto: '5', nombre_producto: 'Café Sello Rojo', presentacion: '250 gramos.', precio: 7500, imagen_url: 'imagenes/cafe.jpg' },
+            { id_producto: '6', nombre_producto: 'Azúcar Incauca', presentacion: '1 Kg.', precio: 3200, imagen_url: 'imagenes/azucar.jpg' },
+            { id_producto: '7', nombre_producto: "Atún Van Camp's", presentacion: '160 gramos.', precio: 6000, imagen_url: 'imagenes/atun.jpg' },
+            { id_producto: '8', nombre_producto: 'Papel Higiénico', presentacion: 'Paquete x4', precio: 6500, imagen_url: 'imagenes/papel.jpg' },
+            { id_producto: '9', nombre_producto: 'Gaseosa Coca-Cola', presentacion: 'Botella 3 Litros', precio: 12000, imagen_url: 'https://megatiendas.vtexassets.com/arquivos/ids/174255/7702535024447.jpg?v=638697024878100000' },
+            { id_producto: '10', nombre_producto: 'Gaseosa Quatro Toronja', presentacion: 'Botella 3 Litros', precio: 11000, imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/35048568/Quatro-Toronja-3-Litros-256395_a.jpg?v=639239483074500000' },
+            { id_producto: '11', nombre_producto: 'Gaseosa Colombiana Postobón', presentacion: 'Botella 3.125 Litros', precio: 9500, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596766/Gaseosa-COLOMBIANA-3125-ml-1051515_a.jpg?v=638476694806770000' },
+            { id_producto: '12', nombre_producto: 'Paquete Bon bon bum', presentacion: '2.220 g', precio: 10450, imagen_url: 'https://colombinacontentmanager-prd.s3.us-east-1.amazonaws.com/Dulces/7702011023285_A1N1_es.jpg' },
+            { id_producto: '13', nombre_producto: 'Papas Margarita Pollo', presentacion: 'Paquete 105 g', precio: 4200, imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/24368504/Papas-Fritas-Pollo-MARGARITA-105-g-309536_a.jpg?v=638575037198270000' },
+            { id_producto: '14', nombre_producto: 'Chocoramo Tradicional', presentacion: 'Ponqué 65 g', precio: 2800, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596796/Ponque-CHOCORAMO-65-g-1051543_a.jpg?v=638476695221970000' },
+            { id_producto: '15', nombre_producto: 'Pastas Doria Spaghetti', presentacion: 'Paquete 500 g', precio: 3900, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596765/Pasta-Spaghetti-DORIA-500-g-1051514_a.jpg?v=638476694793630000' }
+        ];
 
-        let listaProductos = [];
+        let listaProductos = [...PRODUCTOS_BASE_CATALOGO];
         let categoriaSeleccionada = 'todas';
 
         // Carga segura y sanitizada del carrito desde localStorage
@@ -835,124 +852,97 @@
         }
 
         async function cargarCatalogo() {
+            // 1. Mostrar de inmediato el catálogo y calcular categorías sin esperas
+            actualizarContadoresCategorias();
+            filtrarProductos();
+            if (spinner) spinner.style.display = 'none';
+
+            // 2. Intentar actualizar desde Supabase en segundo plano si está disponible
             try {
-                if (spinner) spinner.style.display = 'block';
-                const resultado = await obtenerProductos();
-                listaProductos = (resultado.productos || []).map((p, idx) => ({
-                    ...p,
-                    id_producto: String(p.id_producto !== undefined && p.id_producto !== null ? p.id_producto : (idx + 1)),
-                    precio: Number(p.precio) || 0
-                }));
-
-                const badge = document.getElementById('badge-supabase');
-                const textoBadge = document.getElementById('texto-estado-supabase');
-
-                if (resultado.source === 'supabase') {
-                    if (textoBadge) textoBadge.textContent = `Supabase en vivo (${listaProductos.length})`;
-                } else {
-                    if (textoBadge) textoBadge.textContent = 'Catálogo Conectado';
+                const SUPABASE_URL = 'https://kwdapcjhhrxijvpteflg.supabase.co';
+                const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imt3ZGFwY2poaHJ4aWp2cHRlZmxnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODk0MTA1MzksImV4cCI6MjEwNDk4NjUzOX0.SJYrdYjbwvKNp8f1YzkdLVl5HyrGqVNPg-GFzznJuao';
+                let client = null;
+                if (typeof supabase !== 'undefined' && supabase.createClient) {
+                    client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                 }
 
-                actualizarContadoresCategorias();
-                renderizarProductos(listaProductos);
+                if (client) {
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 2000));
+                    const fetchPromise = client.from('productos').select('*').order('id_producto', { ascending: true });
+                    const { data, error } = await Promise.race([fetchPromise, timeoutPromise]);
+                    if (!error && data && data.length > 0) {
+                        listaProductos = data.map((p, idx) => ({
+                            ...p,
+                            id_producto: String(p.id_producto !== undefined && p.id_producto !== null ? p.id_producto : (idx + 1)),
+                            precio: Number(p.precio) || 0
+                        }));
+                        const textoBadge = document.getElementById('texto-estado-supabase');
+                        if (textoBadge) textoBadge.textContent = `Supabase en vivo (${data.length})`;
+                        actualizarContadoresCategorias();
+                        filtrarProductos();
+                    }
+                }
             } catch (err) {
-                console.error('Error al cargar productos:', err);
-                mostrarToast('Error al cargar los productos', true);
-            } finally {
-                if (spinner) spinner.style.display = 'none';
+                console.warn('Operando con catálogo integrado:', err);
             }
         }
 
         // Búsqueda en tiempo real
-        inputBusqueda.addEventListener('input', filtrarProductos);
-        btnBuscar.addEventListener('click', filtrarProductos);
+        if (inputBusqueda) inputBusqueda.addEventListener('input', filtrarProductos);
+        if (btnBuscar) btnBuscar.addEventListener('click', filtrarProductos);
 
-        // Filtro por categorías
-        document.querySelectorAll('#lista-categorias li').forEach(item => {
-            item.addEventListener('click', () => {
-                document.querySelectorAll('#lista-categorias li').forEach(li => li.classList.remove('active-filter'));
+        // Filtro interactivo por categorías
+        const lisCategorias = document.querySelectorAll('#lista-categorias li');
+        lisCategorias.forEach(item => {
+            item.addEventListener('click', (e) => {
+                e.preventDefault();
+                lisCategorias.forEach(li => li.classList.remove('active-filter'));
                 item.classList.add('active-filter');
-                categoriaSeleccionada = item.getAttribute('data-categoria');
+                categoriaSeleccionada = item.getAttribute('data-categoria') || 'todas';
                 filtrarProductos();
             });
         });
 
-        // Sincronizar catálogo con Supabase
-        document.getElementById('btn-sincronizar').addEventListener('click', async () => {
-            mostrarToast('Sincronizando con Supabase...');
-            const res = await sincronizarCatalogo();
-            if (res.success) {
-                mostrarToast(res.mensaje || '¡Catálogo sincronizado exitosamente en Supabase!');
-                await cargarCatalogo();
-            } else {
-                mostrarToast(res.error || 'Error al sincronizar catálogo con Supabase', true);
-            }
-        });
+        // Sincronizar catálogo
+        const btnSinc = document.getElementById('btn-sincronizar');
+        if (btnSinc) {
+            btnSinc.addEventListener('click', async () => {
+                mostrarToast('Sincronizando catálogo...');
+                try {
+                    const res = await fetch('/api/seed', { method: 'POST', headers: { 'Content-Type': 'application/json' } });
+                    const resData = await res.json();
+                    if (resData.success) {
+                        mostrarToast(resData.mensaje || '¡Catálogo sincronizado exitosamente!');
+                        await cargarCatalogo();
+                    } else {
+                        mostrarToast(resData.error || 'Aviso: La sincronización requiere servidor Node.js activo.', true);
+                    }
+                } catch (e) {
+                    mostrarToast('Aviso: Disponible con servidor Node.js activo.', true);
+                }
+            });
+        }
 
         // Escuchadores del Carrito de Compras
-        document.getElementById('btn-abrir-carrito-header').addEventListener('click', abrirCarrito);
-        document.getElementById('btn-abrir-carrito-flotante').addEventListener('click', abrirCarrito);
-        document.getElementById('btn-cerrar-carrito').addEventListener('click', cerrarCarrito);
-        cartOverlay.addEventListener('click', cerrarCarrito);
-        document.getElementById('btn-vaciar-carrito').addEventListener('click', vaciarCarrito);
-        document.getElementById('btn-pedir-whatsapp').addEventListener('click', enviarPedidoWhatsApp);
+        const btnOpenHeader = document.getElementById('btn-abrir-carrito-header');
+        const btnOpenFloat = document.getElementById('btn-abrir-carrito-flotante');
+        const btnCloseCart = document.getElementById('btn-cerrar-carrito');
+        const btnClearCart = document.getElementById('btn-vaciar-carrito');
+        const btnOrderWhatsApp = document.getElementById('btn-pedir-whatsapp');
 
-        // Inicializar badges y estado del carrito
+        if (btnOpenHeader) btnOpenHeader.addEventListener('click', abrirCarrito);
+        if (btnOpenFloat) btnOpenFloat.addEventListener('click', abrirCarrito);
+        if (btnCloseCart) btnCloseCart.addEventListener('click', cerrarCarrito);
+        if (cartOverlay) cartOverlay.addEventListener('click', cerrarCarrito);
+        if (btnClearCart) btnClearCart.addEventListener('click', vaciarCarrito);
+        if (btnOrderWhatsApp) btnOrderWhatsApp.addEventListener('click', enviarPedidoWhatsApp);
+
+        // Inicializar estado del carrito y contadores de categorías de inmediato
         actualizarBadgesCarrito();
+        actualizarContadoresCategorias();
 
-        // Carga inicial
+        // Iniciar carga del catálogo
         cargarCatalogo();
     </script>
-
-    <!-- Respaldo estático a prueba de fallos para GitHub Pages o apertura local directa (file://) -->
-    <script>
-        (function() {
-            var catalogoRespaldo = [
-                { id_producto: '1', nombre_producto: 'Arroz Diana', presentacion: 'Presentación 1 Kg.', precio: 4500, imagen_url: 'imagenes/arroz.jpg' },
-                { id_producto: '2', nombre_producto: 'Aceite Premier', presentacion: 'Botella 900 ml.', precio: 12000, imagen_url: 'imagenes/aceite.jpg' },
-                { id_producto: '3', nombre_producto: 'Leche Entera', presentacion: 'Bolsa 1 Litro.', precio: 3800, imagen_url: 'imagenes/leche.jpg' },
-                { id_producto: '4', nombre_producto: 'Huevos AA', presentacion: '30 Unidades.', precio: 18000, imagen_url: 'imagenes/huevos.jpg' },
-                { id_producto: '5', nombre_producto: 'Café Sello Rojo', presentacion: '250 gramos.', precio: 7500, imagen_url: 'imagenes/cafe.jpg' },
-                { id_producto: '6', nombre_producto: 'Azúcar Incauca', presentacion: '1 Kg.', precio: 3200, imagen_url: 'imagenes/azucar.jpg' },
-                { id_producto: '7', nombre_producto: "Atún Van Camp's", presentacion: '160 gramos.', precio: 6000, imagen_url: 'imagenes/atun.jpg' },
-                { id_producto: '8', nombre_producto: 'Papel Higiénico', presentacion: 'Paquete x4', precio: 6500, imagen_url: 'imagenes/papel.jpg' },
-                { id_producto: '9', nombre_producto: 'Gaseosa Coca-Cola', presentacion: 'Botella 3 Litros', precio: 12000, imagen_url: 'https://megatiendas.vtexassets.com/arquivos/ids/174255/7702535024447.jpg?v=638697024878100000' },
-                { id_producto: '10', nombre_producto: 'Gaseosa Quatro Toronja', presentacion: 'Botella 3 Litros', precio: 11000, imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/35048568/Quatro-Toronja-3-Litros-256395_a.jpg?v=639239483074500000' },
-                { id_producto: '11', nombre_producto: 'Gaseosa Colombiana Postobón', presentacion: 'Botella 3.125 Litros', precio: 9500, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596766/Gaseosa-COLOMBIANA-3125-ml-1051515_a.jpg?v=638476694806770000' },
-                { id_producto: '12', nombre_producto: 'Paquete Bon bon bum', presentacion: '2.220 g', precio: 10450, imagen_url: 'https://colombinacontentmanager-prd.s3.us-east-1.amazonaws.com/Dulces/7702011023285_A1N1_es.jpg' },
-                { id_producto: '13', nombre_producto: 'Papas Margarita Pollo', presentacion: 'Paquete 105 g', precio: 4200, imagen_url: 'https://exitocol.vtexassets.com/arquivos/ids/24368504/Papas-Fritas-Pollo-MARGARITA-105-g-309536_a.jpg?v=638575037198270000' },
-                { id_producto: '14', nombre_producto: 'Chocoramo Tradicional', presentacion: 'Ponqué 65 g', precio: 2800, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596796/Ponque-CHOCORAMO-65-g-1051543_a.jpg?v=638476695221970000' },
-                { id_producto: '15', nombre_producto: 'Pastas Doria Spaghetti', presentacion: 'Paquete 500 g', precio: 3900, imagen_url: 'https://carulla.vtexassets.com/arquivos/ids/13596765/Pasta-Spaghetti-DORIA-500-g-1051514_a.jpg?v=638476694793630000' }
-            ];
-
-            setTimeout(function() {
-                var cont = document.getElementById('contenedor-productos');
-                var spin = document.getElementById('spinner-carga');
-                if (!cont) return;
-
-                var cards = cont.querySelectorAll('.card');
-                if (cards.length === 0) {
-                    if (spin) spin.style.display = 'none';
-                    cont.innerHTML = catalogoRespaldo.map(function(p) {
-                        var precioFmt = '$' + Number(p.precio).toLocaleString('es-CO');
-                        return '<div class="card" id="producto-' + p.id_producto + '">' +
-                            '<img src="' + p.imagen_url + '" alt="' + p.nombre_producto + '" onerror="this.src=\'imagenes/arroz.jpg\'">' +
-                            '<span class="card-category-badge"><i class="fa-solid fa-tag"></i> Catálogo</span>' +
-                            '<h3>' + p.nombre_producto + '</h3>' +
-                            '<p>' + p.presentacion + '</p>' +
-                            '<h2>' + precioFmt + '</h2>' +
-                            '<button type="button" class="btn-add-cart" id="btn-add-' + p.id_producto + '" data-prod-id="' + p.id_producto + '">' +
-                                '<i class="fa-solid fa-cart-plus"></i> Agregar al carrito' +
-                            '</button>' +
-                        '</div>';
-                    }).join('');
-
-                    var textoBadge = document.getElementById('texto-estado-supabase');
-                    if (textoBadge) textoBadge.textContent = 'Catálogo Conectado';
-                }
-            }, 2500);
-        })();
-    </script>
-
 </body>
 </html>
